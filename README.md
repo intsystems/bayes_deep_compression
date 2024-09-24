@@ -4,15 +4,17 @@
 
 ## Algorithms and stack
 
-### 1. ELBO-based
+### 1. HMC
+
+### 2. ELBO-based
 
 Numpy, scipy, torch, matplotlib, ...
 
-### 2. Laplase approxiamtion
+### 3. Laplase approxiamtion
 
 Numpy, scipy, torch, matplotlib, ...
 
-### 3. Rényi divergence
+### 4. Rényi divergence
 
 Numpy, scipy, torch, matplotlib, ...
 
