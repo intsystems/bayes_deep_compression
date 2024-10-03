@@ -1,18 +1,12 @@
 [tool.poetry]
-name = "bayes-deep-compression"
-version = "0.1.0"
-description = "This repository implements code for bayessian algorithms"
-authors = ["Your Name <you@example.com>"]
-license = "GPL-3.0 license"
-readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.11"
 numpy = "^2.1.1"
 pandas = "^2.2.3"
-pytorch = "^1.0.2"
+torch = "^2.4"
 matplotlib = "^3.9.2"
-
 
 [build-system]
 requires = ["poetry-core"]
