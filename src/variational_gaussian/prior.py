@@ -3,9 +3,9 @@ import torch.nn as nn
 from typing import Any
 
 
-class withGaussianPrior(type):
+class WithGaussianPrior(type):
     def __init__(cls, name, bases, namespace):
-        super(withGaussianPrior, cls).__init__(name, bases, namespace)
+        super(WithGaussianPrior, cls).__init__(name, bases, namespace)
 
     def _base_forward_pre_hook(module, *args):
         # sample weights here
@@ -19,13 +19,13 @@ class withGaussianPrior(type):
         """ rewrite submodules of the user's module. Samples weights from posterior to every submodule
                 before forward(). For Linear submodules uses local parametrization trick.
         """
-        base_nn: nn.Module = super(withGaussianPrior, cls).__call__(*args, **kwds)
+        base_nn: nn.Module = super(WithGaussianPrior, cls).__call__(*args, **kwds)
 
         for module in base_nn.modules():
             if type(module) is not nn.Linear:
-                module.register_forward_pre_hook(withGaussianPrior._base_forward_pre_hook)
+                module.register_forward_pre_hook(WithGaussianPrior._base_forward_pre_hook)
             else:
-                module.register_forward_pre_hook(withGaussianPrior._linear_forward_pre_hook)
+                module.register_forward_pre_hook(WithGaussianPrior._linear_forward_pre_hook)
 
             # add means and stds for module's weights for sampling and ELBO-training
             module.mean = nn.Parameter(...)

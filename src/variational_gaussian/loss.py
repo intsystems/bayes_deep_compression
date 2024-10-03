@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 
-class addBayessianLoss():
+class AddBayessianLoss():
     def __init__(self, loss, bayessian_nn):
         """change loss function for neural network for ELBO loss
         """
