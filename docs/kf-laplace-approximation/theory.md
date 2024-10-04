@@ -36,14 +36,16 @@ $$
     \frac{\partial log(p)}{\partial^2 \theta} = \frac{\nabla_\theta p \nabla_\theta p}{p} + \pa
 $$
 
-Note that 
+Note that approximation is rigid under condition:
 $$
-    r \frac{\partial^2}{\partial^2 \theta} \gg  (\frac{}{})^2
+    p \frac{\partial^2 p}{\partial^2 \theta} \gg  (\frac{\partial p}{\partial \theta })^2
 $$
 
-As you would expect authors doesn't provide any further reasoning for. So just believe them, because they are 10x smarter than you. 
+As you would expect authors doesn't burden themself with  proper reasoning. 
 
 
-## 
+## Actual steps of 
+
+Before hessian inversion we actually need to calculate it:
 
 ![./static/]()
