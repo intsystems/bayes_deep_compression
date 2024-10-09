@@ -5,11 +5,17 @@ package-mode = false
 python = "^3.11"
 numpy = "^2.1.1"
 pandas = "^2.2.3"
-torch = "^2.4"
 matplotlib = "^3.9.2"
+torch = {version = "^2.4.1+cpu", source = "pytorch_cpu"}
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.29.5"
+
+
+[[tool.poetry.source]]
+name = "pytorch_cpu"
+url = "https://download.pytorch.org/whl/cpu"
+priority = "explicit"
 
 [build-system]
 requires = ["poetry-core"]
