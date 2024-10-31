@@ -165,5 +165,6 @@ cython_debug/
 papers
 slides
 
-# large data
+# large data and models
 examples/**/data/
+examples/**/artifacts/
