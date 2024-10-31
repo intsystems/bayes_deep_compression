@@ -1,4 +1,4 @@
 batch_size: 32
 
 num_layers: 5
-hidden_size: 100
+hidden_size: 128
