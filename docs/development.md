@@ -1,4 +1,3 @@
-
 Use Makefile for 
 1) Development environment installation:
 ```
@@ -11,4 +10,8 @@ Use Makefile for
 3) Running tets:
 ```
     make tests
+```
+4) Building docs
+```
+
 ```

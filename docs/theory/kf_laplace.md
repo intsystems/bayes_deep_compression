@@ -49,3 +49,8 @@ As you would expect authors doesn't burden themself with  proper reasoning.
 Before hessian inversion we actually need to calculate it:
 
 ![./static/]()
+
+## Alert
+
+Currently we support only linear layers. Take a look at 
+[awesome repo](https://github.com/gpauloski/kfac-pytorch?tab=readme-ov-file), which supports convolutional and transformers layers.

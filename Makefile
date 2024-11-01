@@ -7,3 +7,6 @@ format:
 
 tests:
 	pytest tets/
+
+prepare-docs:
+	mkdocs build
