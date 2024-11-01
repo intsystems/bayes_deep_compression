@@ -2,7 +2,8 @@ install-env:
 	poetry install
 
 format:
-	ruff format src/ tests/ examples/
+	ruff format src/ 
+	isort src/
 
 tests:
 	pytest tets/

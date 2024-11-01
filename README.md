@@ -13,25 +13,7 @@ Currently we support only linear layers. Take a look at
 
 ## Installation
 
-...
 
-## Development
-
-Formidable copypaste of [repo](https://github.com/JavierAntoran/Bayesian-Neural-Networks) phonying to be in touch with current meta techstack.
-
-Use Makefile for 
-1) Development environment installation:
-```
-    make install-env
-```
-2) Formating:
-```
-    make format
-``` 
-3) Running tets:
-```
-    make tests
-```
 
 ## References
 

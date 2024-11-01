@@ -5,14 +5,6 @@ import torch
 
 
 class Sampler:
-    def chol_scale_invert_kron_factor(factor, prior_scale, data_scale, upper=False):
-        scaled_factor = data_scale * factor + prior_scale * torch.eye(
-            factor.shape[0]
-        ).type(factor.type())
-        inv_factor = torch.inverse(scaled_factor)
-        chol_inv_factor = torch.cholesky(inv_factor, upper=upper)
-        return chol_inv_factor
-
     def sample_K_laplace_MN(self, MAP, upper_Qinv, lower_HHinv):
         # H = Qi (kron) HHi
         # sample isotropic unit variance mtrix normal
