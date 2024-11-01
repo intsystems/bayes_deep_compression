@@ -1,10 +1,8 @@
-import torch.nn
-from typing import Generic
+from dataclasses import dataclass
 
-from typing import TypeVar
-from src.methods.base.result import BaseOutputModel
+import torch
 
-T = TypeVar('T', bound=BaseOutputModel)
 
-class BaseBayesModel(torch.nn.Module,Generic[T]):
-    def forward(self, x:torch.Tensor[torch.float32]) -> T: ...
+@dataclass
+class BaseOutputModel:
+    output: torch.Tensor[torch.float32]

@@ -1,11 +1,12 @@
 from __future__ import division
 
 import torch
-# from src.base_net import *
+
+from src.methods.base.sampling import BaseSampler
 
 
-class Sampler:
-    def sample_K_laplace_MN(self, MAP, upper_Qinv, lower_HHinv):
+class KFLaplaceSampler:
+    def __call__(self, MAP, upper_Qinv, lower_HHinv):
         # H = Qi (kron) HHi
         # sample isotropic unit variance mtrix normal
         Z = MAP.data.new(MAP.size()).normal_(mean=0, std=1)
