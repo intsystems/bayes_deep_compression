@@ -6,6 +6,11 @@ import torch.nn as nn
 
 
 class HessianRecursion:
+    def __init__(self):
+        ...
+    def fold(self,model):
+        return reduce(self, reversed(model.modules))
+
     def __call__(
         self,
         prev_hessian: torch.Tensor,

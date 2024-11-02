@@ -4,5 +4,10 @@ theme:
   name: "material"
 
 plugins:
-- search
-- mkdocstrings
+  - search
+  - mkdocstrings:
+      handlers:
+          python:
+            paths: [.]
+            options:
+              allow_inspection: true

@@ -1,3 +1,2 @@
-# Welcome to MkDocs
+# BayesShrink
 
-Welcome to bayessian-compression.

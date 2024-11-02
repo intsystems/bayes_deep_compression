@@ -10,3 +10,6 @@ tests:
 
 prepare-docs:
 	mkdocs build
+
+local docs: prepare-docs
+	mkdocs serve
