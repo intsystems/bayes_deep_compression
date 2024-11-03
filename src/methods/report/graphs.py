@@ -1,7 +1,6 @@
-class BasePlot:
-    """
-    Base class for graph API
-    """
+from src.methods.report.base import BasePlot
+
+
 
 
 class TensorBoardPlot(BasePlot): ...

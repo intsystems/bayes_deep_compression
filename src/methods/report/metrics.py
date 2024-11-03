@@ -1,3 +1,5 @@
-class BaseMetric:
-    def __call__(self, accuracy: float):
-        print(accuracy)
+from src.methods.report.base import BaseMetric
+
+class AccuracyMetric:
+    def __init__(self):
+        

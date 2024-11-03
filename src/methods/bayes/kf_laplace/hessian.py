@@ -3,7 +3,19 @@ from functools import reduce
 
 import torch
 import torch.nn as nn
+import torch.nn as nn
 
+
+class WeightsAccumulator:
+    def __init__(
+        self,
+    ):
+        self.sum = 0
+        self.counter = 0
+
+    def __call__(self, module: nn.Module):
+        self.sum += module.data.weights
+        self.counter += 1
 
 class HessianRecursion:
     def __init__(self): ...
@@ -29,4 +41,3 @@ class HessianRecursion:
         return B @ prev_weights @ prev_hessian @ prev_weights @ B + torch.zeros_like()
 
 
-class HessianChain: ...
