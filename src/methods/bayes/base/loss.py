@@ -2,7 +2,7 @@ from typing import Generic, TypeVar
 
 import torch
 
-from src.methods.base.output import BaseOutputModel
+from src.methods.bayes import BaseOutputModel
 
 T = TypeVar("T", bound=BaseOutputModel)
 

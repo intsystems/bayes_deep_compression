@@ -1,4 +1,5 @@
-from src.controls.handlers.base import BaseHandler
+from src.cli.handlers.base import BaseHandler
 
 
-class ScratchHandler(BaseHandler): ...
+class EagerHandler(BaseHandler):
+    def elbo_arch(self): ...

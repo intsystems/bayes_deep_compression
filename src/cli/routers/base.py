@@ -1,11 +1,14 @@
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, ClassVar
 
 from typer import Typer
 
-from src.controls.handlers.base import BaseHandler
+from src.cli.handlers.base import BaseHandler
 
 HandlerT = TypeVar("HandlerT", bound=BaseHandler)
 
 
 class BaseRouter(Typer, Generic[HandlerT]):
-    def __init__(self, handler: HandlerT): ...
+    NAME: ClassVar[str]
+
+    def __init__(self, handler: HandlerT):
+        super().__init__(name=self.NAME)
