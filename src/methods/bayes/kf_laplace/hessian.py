@@ -7,7 +7,7 @@ import torch.nn as nn
 
 class HessianRecursion:
     def __init__(self): ...
-    def fold(self, model):
+    def fold(self, model: nn.Module):
         return reduce(self, reversed(model.modules))
 
     def __call__(
