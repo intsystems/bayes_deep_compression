@@ -1,8 +1,6 @@
 from src.methods.report.base import BasePlot
 
 
-
-
 class TensorBoardPlot(BasePlot): ...
 
 

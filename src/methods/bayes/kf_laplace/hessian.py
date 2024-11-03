@@ -6,19 +6,27 @@ import torch.nn as nn
 import torch.nn as nn
 
 
-class WeightsAccumulator:
+class HessianAccumulator:
     def __init__(
         self,
     ):
         self.sum = 0
         self.counter = 0
 
+    def map(self):
+        return ...
+    
+    def 
+
     def __call__(self, module: nn.Module):
         self.sum += module.data.weights
         self.counter += 1
 
+
 class HessianRecursion:
-    def __init__(self): ...
+    def __init__(self, last_layer_hessian: torch.Tensor):
+        self.last_layer_hessian = last_layer_hessian
+
     def fold(self, model: nn.Module):
         return reduce(self, reversed(model.modules))
 
@@ -39,5 +47,3 @@ class HessianRecursion:
 
         D = torch.zeros_like(prev_weights)
         return B @ prev_weights @ prev_hessian @ prev_weights @ B + torch.zeros_like()
-
-

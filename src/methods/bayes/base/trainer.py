@@ -3,16 +3,20 @@ from typing import Generic, TypeVar
 from src.methods.report.base import ReportChain
 from dataclasses import dataclass
 
-ModelT = TypeVar('ModelT')
+ModelT = TypeVar("ModelT")
+
 
 @dataclass
 class TrainerParams:
     num_epochs: str
 
+
 class BaseBayesTrainer(Generic[ModelT]):
-    def __init__(self, params:TrainerParams, report_chain: ReportChain, ):
+    def __init__(
+        self,
+        params: TrainerParams,
+        report_chain: ReportChain,
+    ):
         self.report_chain = report_chain
 
-
-    def train(self, *args, **kwargs) -> NetDistribution:
-        ...   
+    def train(self, *args, **kwargs) -> NetDistribution: ...

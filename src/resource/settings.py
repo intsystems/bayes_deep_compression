@@ -1,6 +1,4 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-class ModelCOnfig(BaseSettings):
 
-    
-
+class ModelCOnfig(BaseSettings): ...
