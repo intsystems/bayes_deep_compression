@@ -6,7 +6,7 @@ from src.methods.bayes.base.distribution import BaseNetDistribution, BaseNetEnse
 
 
 class KFLaplaceMLPDistribution(BaseNetDistribution):
-    def __init__(self, map_layer_list: ,accumulator: HessianAccumulator):
+    def __init__(self, map_layer_list: list[Linear], accumulator: HessianAccumulator):
         self.accumulator = accumulator
 
     def sample_layer(self):

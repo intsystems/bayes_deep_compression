@@ -1,14 +1,27 @@
 from typing import Generic, TypeVar
-
+import torch
 import torch.nn as nn
 
 from src.methods.bayes.base.trainer import ModelT
 
 
+class MLP(nn.Module):
+    def __init__(self, layer_list: list[nn.Linear], activation: list[nn.Module]):
+        self.net = nn.ModuleList(
+            nn.Sequential([layer, activation]) for layer in layer_list
+        )
+
+    def forward(self,x) -> torch.Tensor:
+        return self.net(x)
+
+
 class BaseNetDistribution(Generic[ModelT]):
     def __init__(self): ...
 
-    def sample(self, *args) -> nn.Module: ...
+    @property
+    def stats(self): ...
+
+    def sample(self, *args) -> MLP: ...
 
 
 DistributionT = TypeVar("DistributionT", bound=BaseNetDistribution)

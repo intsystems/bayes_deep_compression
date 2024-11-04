@@ -10,8 +10,8 @@ OutputT = TypeVar("OutputT", bound=BaseOutputModel)
 
 
 class MLPBayesModel(torch.nn.Module, Generic[OutputT]):
-    def __init__(self, layer_list: list[nn.Module]):
-        self.bayesian_layer_list = layer_list
+    def __init__(self, layer_list: list[nn.Linear]):
+        self.layer_list = layer_list
 
     @abstractmethod
     def forward(self, x: torch.Tensor[torch.float32]) -> list[OutputT]: ...

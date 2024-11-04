@@ -7,9 +7,7 @@ from src.methods.bayes.kf_laplace.model import KFLinearOutput
 
 
 class KfMLP(MLPBayesModel[Linear]):
-    def __init__(
-        self, layer_list: list[nn.Linear], activation: list[nn.Module]
-    ):
+    def __init__(self, layer_list: list[nn.Linear], activation: list[nn.Module]):
         super().__init__(layer_list)
         self.activation = activation
 
