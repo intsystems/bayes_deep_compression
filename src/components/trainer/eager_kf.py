@@ -1,4 +1,7 @@
-from src.methods.bayes.kf_laplace.trainer import KFEagerTraining
+from src.methods.bayes.kf_laplace.trainer import KFEagerTraining, KfTrainerParams
+
+
+class KFParamsComponent(KfTrainerParams): ...
 
 
 class KFEagerTrainingComponent(KFEagerTraining):

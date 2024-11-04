@@ -1,40 +1,40 @@
 from src.methods.bayes.base.trainer import BaseBayesTrainer
 from src.methods.bayes.kf_laplace.net import KFMlp
-from src.methods.bayes.kf_laplace.hessian import HessianRecursion
+from methods.bayes.kf_laplace.loss import HessianRecursion
 from src.methods.bayes.base.trainer import TrainerParams
-from src.methods.bayes.kf_laplace.hessian import HessianAccumulator
+from methods.bayes.kf_laplace.loss import HessianAccumulator
+from src.resource.dataset import DatasetLoader
+
+
 from dataclasses import dataclass
 
+
 @dataclass
-class KfTrainerParams(TrainerParams):
-    ...
+class KfTrainerParams(TrainerParams): ...
 
 
 class KFEagerTraining(BaseBayesTrainer):
-    def __init__(self, model: KFMlp, params, report_chain):
-        super().__init__(params, report_chain)
+    def __init__(
+        self, model: KFMlp, dataset_loader: DatasetLoader, params, report_chain
+    ):
+        super().__init__(params, report_chain, dataset_loader=dataset_loader)
         self.model = model
 
-    def train(self,):
+    def train(
+        self,
+    ):
         map_net = self.train_map()
-        return self.train_posterior()
-
+        return self.train_posterior(map_net)
 
     def train_map(self):
-        KFMlp()
+        for train_sample in self.dataset_loader:
+            self.model(train_sample)
+            self.model.zero_grad()
 
     def train_posterior(self, map_net: KFMlp):
+        for train_sample in self.dataset_loader:
+            self.map_net
+            train_sample
         accumulator = HessianAccumulator()
         HessianRecursion()
         return accumulator
-        
-        
-
-
-
-class KFPosteriorTrainer(BaseBayesTrainer):
-    def __init__(self):
-        ...
-        
-    def train(self,model:, dataset:):
-        ...

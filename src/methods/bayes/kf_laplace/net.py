@@ -17,9 +17,9 @@ class KFMlp(MLPBayesModel[KfLinear]):
     def __init__(self, bayesian_layer_list: list[KfLinear]):
         super().__init__(bayesian_layer_list)
 
-    def forward(self, x:torch.Tensor):
-        layer_output = KFLinearOutput(activation=x,pre_activation=x) 
+    def forward(self, x: torch.Tensor):
+        layer_output = KFLinearOutput(activation=x, pre_activation=x)
         return [
-            layer_output:= layer(layer_output.activation)
+            layer_output := layer(layer_output.activation)
             for layer in self.bayesian_layer_list
         ]

@@ -5,6 +5,7 @@ from src.methods.bayes.base.distribution import BaseNetDistribution
 from src.methods.bayes.kf_laplace.net import KFMlp, KfLinear
 from src.methods.bayes.kf_laplace.hessian import HessianAccumulator
 
+
 class KFLaplaceMLPDistribution(BaseNetDistribution):
     def __init__(self, accumulator: HessianAccumulator):
         self
@@ -23,12 +24,6 @@ class KFLaplaceMLPDistribution(BaseNetDistribution):
         bias_mtx_sample = all_mtx_sample[:, -1]
 
         return weight_mtx_sample, bias_mtx_sample
-    
+
     def sample_net(self):
-        return nn.ModuleList(
-            [
-                self.sample_layer()
-                for layer in self.accumulator
-            ]
-        )
-    
+        return nn.ModuleList([self.sample_layer() for layer in self.accumulator])
