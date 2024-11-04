@@ -1,0 +1,1 @@
+The section is being developed. Please, see [examples](https://github.com/intsystems/bayes_deep_compression/blob/semkin_variational/examples/variational_gaussian/MNIST/variational_gaussian_MNIST.ipynb) on GitHub for now.
