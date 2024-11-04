@@ -1,5 +1,6 @@
 from torch.nn import CrossEntropyLoss
 from torchvision.datasets import MNIST
+
 from src.resource.dataset import DatasetLoader
 
 

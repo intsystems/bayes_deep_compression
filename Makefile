@@ -1,9 +1,11 @@
+FOLDERS = src/ examples/ 
+
 install-env:
 	poetry install
 
 format:
-	ruff format src/ 
-	isort src/
+	ruff format $(FOLDERS) 
+	isort $(FOLDERS)
 
 tests:
 	pytest tets/

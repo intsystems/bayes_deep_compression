@@ -3,8 +3,7 @@ from dataclasses import dataclass
 import torch.nn as nn
 from torch.optim.sgd import SGD
 
-from src.methods.bayes.kf_laplace.trainer import (KFEagerTraining,
-                                                  KfTrainerParams)
+from src.methods.bayes.kf_laplace.trainer import KFEagerTraining, KfTrainerParams
 
 
 @dataclass

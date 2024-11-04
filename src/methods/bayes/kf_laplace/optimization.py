@@ -42,15 +42,31 @@ class RecurseHessian:
         B[:, I] = (layer_pre_acts > 0).type(B.type())
         return B @ prev_weights @ prev_hessian @ prev_weights @ B + torch.zeros_like()
 
+class Tracker:
+    def __init__(self, generator):
+        self.generator = generator
+        self.cnt =0 
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        self.cnt += 1
+        return next(self.generator)
+
 
 class HessianAccumulator:
     def __init__(self, hessian_generators: Iterator[RecurseHessian]):
-        self.hessian_accumulation = sum(
-            hessian_generators for hessian_generator in hessian_generators
+        tracked_hessian_generators = Tracker(hessian_generators)
+        self.hessian_accumulation = reduce(
+            lambda accumulated_hessian_generator, next_hessian_generator: 
+                [u_elem + v_elem for u_elem, v_elem in zip(accumulated_hessian_generator, next_hessian_generator)],
+            tracked_hessian_generators,
+            list(next(tracked_hessian_generators)),
         )
-        self.hessian_accumulation: list[torch.Tensor] = []
-        self.cnt = 0
+        self.avg_hessian = [hessian/self.number_of_iteration for hessian in self.hessian_accumulation]
 
+        
     @property
     def statistics(self):
         return (

@@ -5,8 +5,7 @@ import torch
 from src.methods.bayes.base.trainer import BaseBayesTrainer, TrainerParams
 from src.methods.bayes.kf_laplace.distribution import KFLaplaceMLPDistribution
 from src.methods.bayes.kf_laplace.net import KfMLP
-from src.methods.bayes.kf_laplace.optimization import (HessianAccumulator,
-                                                       RecurseHessian)
+from src.methods.bayes.kf_laplace.optimization import HessianAccumulator, RecurseHessian
 from src.resource.dataset import DatasetLoader
 
 

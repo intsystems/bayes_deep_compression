@@ -2,14 +2,12 @@ import torch
 import torch.nn as nn
 
 from methods.bayes.kf_laplace.optimization import HessianAccumulator
-from src.methods.bayes.base.distribution import (BaseNetDistribution,
-                                                 BaseNetEnsemble)
-from src.methods.bayes.kf_laplace.net import KfLinear, KfMLP
+from src.methods.bayes.base.distribution import BaseNetDistribution, BaseNetEnsemble
 
 
 class KFLaplaceMLPDistribution(BaseNetDistribution):
-    def __init__(self, accumulator: HessianAccumulator):
-        self
+    def __init__(self, map_layer_list: ,accumulator: HessianAccumulator):
+        self.accumulator = accumulator
 
     def sample_layer(self):
         # H = Qi (kron) HHi
