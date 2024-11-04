@@ -1,25 +1,24 @@
 import torch
-from src.methods.bayes.base.net import BayesLinearLayer, MLPBayesModel
+import torch.nn as nn
+from torch.nn import Linear
+
+from src.methods.bayes.base.net import MLPBayesModel
 from src.methods.bayes.kf_laplace.model import KFLinearOutput
 
 
-class KfLinear(BayesLinearLayer[KFLinearOutput]):
-    def __init__(self, in_features, out_features, device=None):
-        super().__init__(in_features, out_features, device)
-
-    def forward(self, input: torch.Tensor):
-        return KFLinearOutput(
-            activation=super().forward(input), pre_activation=super().forward(input)
-        )
-
-
-class KFMlp(MLPBayesModel[KfLinear]):
-    def __init__(self, bayesian_layer_list: list[KfLinear]):
+class KfMLP(MLPBayesModel[Linear]):
+    def __init__(
+        self, bayesian_layer_list: list[nn.Linear], activation: list[nn.Module]
+    ):
         super().__init__(bayesian_layer_list)
+        self.activation = activation
 
     def forward(self, x: torch.Tensor):
-        layer_output = KFLinearOutput(activation=x, pre_activation=x)
+        layer_output = x
         return [
-            layer_output := layer(layer_output.activation)
+            KFLinearOutput(
+                pre_activation=(pre_activation := layer(layer_output)),
+                activation=(layer_output := self.activation(pre_activation)),
+            )
             for layer in self.bayesian_layer_list
         ]

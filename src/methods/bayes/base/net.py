@@ -1,7 +1,9 @@
-from typing import Generic, TypeVar
-import torch.nn as nn
 from abc import abstractmethod
+from typing import Generic, TypeVar
+
 import torch.nn
+import torch.nn as nn
+
 from src.methods.bayes.base.output import BaseOutputModel
 
 OutputT = TypeVar("OutputT", bound=BaseOutputModel)
@@ -17,8 +19,6 @@ class BayesLinearLayer(Generic[OutputT], nn.Linear):
 
 LinearT = TypeVar("LinearT", bound=BayesLinearLayer)
 
-class 
-
 
 class MLPBayesModel(torch.nn.Module, Generic[LinearT]):
     def __init__(self, bayesian_layer_list: list[LinearT]):
@@ -26,4 +26,3 @@ class MLPBayesModel(torch.nn.Module, Generic[LinearT]):
 
     @abstractmethod
     def forward(self, x: torch.Tensor[torch.float32]): ...
-   

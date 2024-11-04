@@ -1,6 +1,7 @@
-from torch.utils.data.dataloader import DataLoader
-import torch
 from dataclasses import dataclass
+
+import torch
+from torch.utils.data.dataloader import DataLoader
 
 
 @dataclass
@@ -10,4 +11,9 @@ class DatasetLoaderOutput:
 
 
 class DatasetLoader(DataLoader):
+    loss: torch.nn.MSELoss
+
+    def __iter__(self):
+        return self
+
     def __next__(self) -> DatasetLoaderOutput: ...

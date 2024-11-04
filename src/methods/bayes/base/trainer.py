@@ -1,19 +1,20 @@
-from src.methods.bayes.base.distribution import NetDistribution
-from typing import Generic, TypeVar
-from src.methods.report.base import ReportChain
 from dataclasses import dataclass
-from src.resource.dataset import DatasetLoader
-from src.methods.bayes.base.loss import BaseLoss
+from typing import Generic, TypeVar
+
 from torch.optim.optimizer import Optimizer
+
+from methods.bayes.base.optimization import BaseLoss
+from src.methods.bayes.base.distribution import NetDistribution
+from src.methods.report.base import ReportChain
+from src.resource.dataset import DatasetLoader
 
 ModelT = TypeVar("ModelT")
 
 
 @dataclass
 class TrainerParams:
-    num_epochs: str
+    num_epochs: int
     optimizer: Optimizer
-    loss: BaseLoss
 
 
 class BaseBayesTrainer(Generic[ModelT]):

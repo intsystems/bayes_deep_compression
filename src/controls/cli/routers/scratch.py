@@ -1,4 +1,5 @@
 from cli.handlers.eager import ScratchHandler
+
 from src.cli.routers.base import BaseRouter
 
 

@@ -1,4 +1,4 @@
-from typing import Generic, TypeVar, ClassVar
+from typing import ClassVar, Generic, TypeVar
 
 from typer import Typer
 

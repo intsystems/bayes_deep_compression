@@ -1,4 +1,5 @@
 from typer import Typer
+
 from src.cli.routers.base import BaseRouter
 
 

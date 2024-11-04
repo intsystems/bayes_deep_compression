@@ -1,9 +1,6 @@
-from src.kf_laplace.flow import HessianFold, HessianFlow
+from src.methods.bayes.kf_laplace.optimization import RecurseHessian
 
 
-def test_fold():
-    assert HessianFold()
+def test_recurse_hessian():
+    return RecurseHessian()
 
-
-def test_hessian_flow():
-    assert HessianFlow()

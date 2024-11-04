@@ -1,9 +1,10 @@
-import torch.nn as nn
 import torch
+import torch.nn as nn
 
-from src.methods.bayes.base.distribution import BaseNetDistribution
-from src.methods.bayes.kf_laplace.net import KFMlp, KfLinear
-from src.methods.bayes.kf_laplace.hessian import HessianAccumulator
+from methods.bayes.kf_laplace.optimization import HessianAccumulator
+from src.methods.bayes.base.distribution import (BaseNetDistribution,
+                                                 BaseNetEnsemble)
+from src.methods.bayes.kf_laplace.net import KfLinear, KfMLP
 
 
 class KFLaplaceMLPDistribution(BaseNetDistribution):
@@ -27,3 +28,6 @@ class KFLaplaceMLPDistribution(BaseNetDistribution):
 
     def sample_net(self):
         return nn.ModuleList([self.sample_layer() for layer in self.accumulator])
+
+
+class KfLaplaceEnsemble(BaseNetEnsemble[KFLaplaceMLPDistribution]): ...

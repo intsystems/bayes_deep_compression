@@ -1,12 +1,13 @@
-from src.methods.bayes.base.trainer import BaseBayesTrainer
-from src.methods.bayes.kf_laplace.net import KFMlp
-from methods.bayes.kf_laplace.loss import HessianRecursion
-from src.methods.bayes.base.trainer import TrainerParams
-from methods.bayes.kf_laplace.loss import HessianAccumulator
-from src.resource.dataset import DatasetLoader
-
-
 from dataclasses import dataclass
+
+import torch
+
+from src.methods.bayes.base.trainer import BaseBayesTrainer, TrainerParams
+from src.methods.bayes.kf_laplace.distribution import KFLaplaceMLPDistribution
+from src.methods.bayes.kf_laplace.net import KfMLP
+from src.methods.bayes.kf_laplace.optimization import (HessianAccumulator,
+                                                       RecurseHessian)
+from src.resource.dataset import DatasetLoader
 
 
 @dataclass
@@ -15,10 +16,15 @@ class KfTrainerParams(TrainerParams): ...
 
 class KFEagerTraining(BaseBayesTrainer):
     def __init__(
-        self, model: KFMlp, dataset_loader: DatasetLoader, params, report_chain
+        self,
+        model: KfMLP,
+        dataset_loader: DatasetLoader,
+        params: KfTrainerParams,
+        report_chain,
     ):
         super().__init__(params, report_chain, dataset_loader=dataset_loader)
         self.model = model
+        self.loss = self.dataset_loader.loss
 
     def train(
         self,
@@ -28,13 +34,18 @@ class KFEagerTraining(BaseBayesTrainer):
 
     def train_map(self):
         for train_sample in self.dataset_loader:
-            self.model(train_sample)
-            self.model.zero_grad()
+            self.loss.forward(self.model.forward(train_sample.x_train))
 
-    def train_posterior(self, map_net: KFMlp):
-        for train_sample in self.dataset_loader:
-            self.map_net
-            train_sample
-        accumulator = HessianAccumulator()
-        HessianRecursion()
-        return accumulator
+            self.params.optimizer.step()
+            self.model.zero_grad()
+        return self.model
+
+    @torch.no_grad
+    def train_posterior(self, map_net: KfMLP):
+        return KFLaplaceMLPDistribution(
+            accumulator=HessianAccumulator(
+                hessian_generators=(
+                    RecurseHessian(train_sample) for train_sample in self.dataset_loader
+                )
+            )
+        )

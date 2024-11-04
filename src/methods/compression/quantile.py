@@ -1,7 +1,7 @@
-from src.compression.pruning.base import BasePruner
+from src.methods.compression.base import BasePruner
 
 
-class QuantileTrimmer:
+class QuantilePruner(BasePruner):
     """
     Similar to p-test cut's weight
     if corresponding confidence interval doesn't
