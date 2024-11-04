@@ -1,12 +1,25 @@
 [tool.poetry]
-package-mode = false
+name = "bayess"
+version = "0.1.0"
+description = ""
+authors = ["_"]
+license = "MIT"
+readme = "README.md"
+
+#packages = [
+#    { include = "src", from = "." },
+#]
 
 [tool.poetry.dependencies]
 python = "^3.11"
-numpy = "^2.1.1"
+numpy = "^2.1.2"
+torch = "^2.5.1"
 pandas = "^2.2.3"
-torch = "^2.4"
 matplotlib = "^3.9.2"
+torchvision = "^0.20.1"
+pydantic = "^2.9.2"
+tqdm = "^4.66.6"
+
 
 [build-system]
 requires = ["poetry-core"]
