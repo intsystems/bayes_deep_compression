@@ -3,7 +3,7 @@
 title: Pipeline
 ---
 classDiagram
-    Trainer <|-- BayesModelCls
+    Trainer <|-- BayesModelCls 
     Trainer <|-- OptimizationParams
     NetDistribution <|--Trainer
     Ensemble <|--NetDistribution
