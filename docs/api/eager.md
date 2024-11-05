@@ -1,5 +1,15 @@
 ```mermaid
 ---
+title: Submersion
+---
+classDiagram
+    Fabric <|-- UserModel
+    BayesModelCls <|--  Fabric
+```
+
+
+```mermaid
+---
 title: Pipeline
 ---
 classDiagram
