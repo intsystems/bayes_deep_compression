@@ -1,4 +1,7 @@
-class VariationalGaussBayesLayer:
+import torch
+import torch.nn as nn
+
+class VariationalGaussBayesLinearLayer:
     def __init__(self):
         ...
 
@@ -22,25 +25,23 @@ class VariationalGaussBayesLayer:
         for bayes_module in self.children():
             bayes_module._sample_params()
 
-class 
-
-
-    d
+        self._net.register_forward_pre_hook(self.linear_pre_hook)
+        self._net.register_forward_hook(self.linear_post_hook)
 
     def linear_pre_hook(lin_module: nn.Linear, args):
-                lin_input: torch.Tensor = args[0]
+        lin_input: torch.Tensor = args[0]
 
-                # detach from previous sampling graph and sample parapms
-                lin_module.weight = self.get_parameter(self._to_mean_param_name("weight")).clone()
-                lin_module.bias = self.get_parameter(self._to_mean_param_name("bias")).clone()
-                
-                # save linear transform with std params
-                lin_module._temp_std_transform = F.linear(
-                    lin_input, 
-                    torch.exp(0.5 * self.get_parameter(self._to_std_param_name("weight")))
-                )
+        # detach from previous sampling graph and sample parapms
+        lin_module.weight = self.get_parameter(self._to_mean_param_name("weight")).clone()
+        lin_module.bias = self.get_parameter(self._to_mean_param_name("bias")).clone()
+        
+        # save linear transform with std params
+        lin_module._temp_std_transform = F.linear(
+            lin_input, 
+            torch.exp(0.5 * self.get_parameter(self._to_std_param_name("weight")))
+        )
 
-    self._net.register_forward_pre_hook(linear_pre_hook)
+
 
     def linear_post_hook(lin_module: nn.Linear, args, lin_output: torch.Tensor):
         # add std part for weight paramter and std part for bias parameter
@@ -50,4 +51,4 @@ class
 
         return lin_output
 
-    self._net.register_forward_hook(linear_post_hook)
+    
