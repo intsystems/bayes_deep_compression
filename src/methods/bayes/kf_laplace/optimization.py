@@ -56,7 +56,10 @@ class Tracker:
         return next(self.generator)
 
 
-class HessianAccumulator:
+class LayerHessianAccumulator:
+    ...
+
+class NetHessianAccumulator:
     def __init__(self, hessian_generators: Iterator[RecurseHessian]):
         tracked_hessian_generators = Tracker(hessian_generators)
         self.hessian_accumulation = reduce(

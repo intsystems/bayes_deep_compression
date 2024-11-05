@@ -13,6 +13,9 @@ class MLP(nn.Module):
 
     def forward(self,x) -> torch.Tensor:
         return self.net(x)
+    
+class BaseLayerDistribution(Generic[ModelT]):
+    ...
 
 
 class BaseNetDistribution(Generic[ModelT]):

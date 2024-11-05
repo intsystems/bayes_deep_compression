@@ -1,4 +1,4 @@
-FOLDERS = src/ examples/ 
+FOLDERS = src/ examples/ tests/
 
 install-env:
 	poetry install
