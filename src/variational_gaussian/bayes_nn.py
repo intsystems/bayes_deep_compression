@@ -20,7 +20,7 @@ class MakeModuleBayessian(nn.Module):
 
         return super().__new__(RenamedBayessianModule)
 
-    def __init__(self, net: nn.Module) -> None:
+    def __init__(self, net: nn.Module) -> None: 
         super().__init__()
 
         # we do not want the net to be registered as submodule

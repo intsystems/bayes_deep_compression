@@ -1,6 +1,6 @@
-# Bayessian nerual networks with variational inference
+# Neural network's pruning using bayessian approach
 
-Here we are going to briefly discuss one of the ways to add a bayessian layer of inference to your nerual network - *variational inference* principle. We will see how this approach changes the learning objective and how it is implemented using [*pytorch*]() framework.
+Model pruning is ... . It allows to save memory and makes models less redundant. Several pruning technics include *dropout*, [optimal brain damage](), ... . We will discuss pruning in the context of three bayessian approaches to neural networks.  We will also look at the implemntation design of bayessian NNs and pruning algorithms in our [library]() based on [*pytorch*](). 
 
 ## Making neural network bayessian
 
@@ -14,7 +14,11 @@ $$
 
 where $p(\mathbf{w} | y, \mathbf{x}, \Theta)$ is *posterior* distribution of the model's parameters based on the train data. Unfortunately, in case of the NNs finfing the posterior is typically intractable. That leads to the intractability of the prediction. Another problem here is how to choose optimal hyperparameters $\Theta$ if we don't know them from some prior knowledge.
 
+## MCMC
+
 ## Variational inference
+
+Here we are going to briefly discuss one of the ways to add a bayessian layer of inference to your nerual network - *variational inference* principle. We will see how this approach changes the learning objective and how it is implemented using [*pytorch*]() framework.
 
 To tackle last issue of hyperparameters bayessian inference has special function called [*evidence*]() which is
 
@@ -96,3 +100,10 @@ $$
 $$
 
 This can be a hint for choosing variational distibutions class. So if you know that $p(\mathbf{w} | y, \mathbf{x}, \Theta)$ have some special properties, make sure that functions from $q$ class have them too (for example, multimodality).
+
+## Kroneker-factorized Laplace
+
+## 
+
+## Reference
+
