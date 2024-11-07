@@ -50,15 +50,20 @@ class BasePriorPosteriorReparam(nn.Module, Generic[DistributionType]):
         self.prior: self.PRIOR = self.PRIOR(**initargs.prior_initargs)
         self.posterior: self.PRIOR = self.POSTERIOR(**initargs.posterior_initargs)
 
+        assert self.posterior.has_rsample == True, "posterior distribution should have '.has_rsample == True'"
+        
         # чтобы параметры появились в model.parameters
         # наверное это не совсем хорошо, можно просто возвращать список параметров пользователю в модель 
-        for name, val in initargs.posterior_initargs.items():
-            if isinstance(val, nn.Parameter):
-                full_name = f"_{name}"
-                self.register_parameter(full_name, val)
+        # for name, val in initargs.posterior_initargs.items():
+        #     if isinstance(val, nn.Parameter):
+        #         full_name = f"_{name}"
+        #         self.register_parameter(full_name, val)
 
-        assert self.posterior.has_rsample == True, \
-                "posterior distribution should have '.has_rsample == True'"
+        # for name, val in initargs.prior_initargs.items():
+        #     if isinstance(val, nn.Parameter):
+        #         full_name = f"prior_{name}"
+        #         self.register_parameter(full_name, val)
+
 
         # if one want to calculate kl divergence, we check that it is implemented
         # if self.extra_calculations.kl_divergence:
@@ -125,22 +130,27 @@ class NormalMixNormalReparam(BasePriorPosteriorReparam):
         for posterior parameters, set require_grad=True
         
         """
-        loc = nn.Parameter(torch.rand(shape), requires_grad=True)
-        scale_f = nn.Parameter(torch.randn(shape), requires_grad=True)
+        self.loc = nn.Parameter(torch.rand(shape), requires_grad=True)
+        self.scale = nn.Parameter(torch.randn(shape), requires_grad=True)
 
-        posterior_params = {"loc": loc, "scale": scale_f}
+        posterior_params = {"loc": self.loc, "scale": self.scale}
 
         # prior params
 
         num_classes = len(self.class_weights)
 
-        mix = D.Categorical(self.class_weights)
+        self.class_weights = nn.Parameter(self.class_weights, requires_grad=False)
+        self.prior_loc = nn.Parameter(torch.zeros(num_classes, *shape), requires_grad= False)
 
         scales = torch.rand(num_classes, *shape)
         for i in range(num_classes):
             scales[i] = self.class_scales[i]
+        
+        self.prior_scales = nn.Parameter(scales, requires_grad= False)
 
-        comp = D.Independent(D.Normal(torch.zeros(num_classes, *shape), scales), len(shape))
+        mix = D.Categorical(self.class_weights)
+
+        comp = D.Independent(D.Normal(self.prior_loc, self.prior_scales), len(shape))
 
         prior_params = {"mixture_distribution": mix ,"component_distribution":comp}
         initargs = InitargsHandler(prior_initargs=prior_params, 
@@ -159,14 +169,14 @@ class NormalNormalReparam(BasePriorPosteriorReparam):
         for posterior parameters, set require_grad=True
         
         """
-        loc = nn.Parameter(torch.rand(shape), requires_grad=True)
-        scale_f = nn.Parameter(torch.randn(shape), requires_grad=True)
+        self.loc = nn.Parameter(torch.rand(shape), requires_grad=True)
+        self.scale = nn.Parameter(torch.randn(shape), requires_grad=True)
 
-        posterior_params = {"loc": loc, "scale": scale_f}
+        posterior_params = {"loc": self.loc, "scale": self.scale}
 
-        loc_prior = nn.Parameter(torch.zeros(shape), requires_grad=False)
-        scale_prior = nn.Parameter(torch.ones(shape), requires_grad=False)
-        prior_params = {"loc": loc_prior, "scale": scale_prior }
+        self.loc_prior = nn.Parameter(torch.zeros(shape), requires_grad=False)
+        self.scale_prior = nn.Parameter(torch.ones(shape), requires_grad=False)
+        prior_params = {"loc": self.loc_prior, "scale": self.scale_prior }
         initargs = InitargsHandler(prior_initargs=prior_params, 
                                    posterior_initargs=posterior_params)
         return initargs
