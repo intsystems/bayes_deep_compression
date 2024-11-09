@@ -7,11 +7,11 @@ from typing import Optional
 class VarKLLoss(BaseLoss):
     def __init__(self):
         super().__init__()
-    def forward(self, posterior_params: nn.ParameterList, prior_parmeter: Optional[nn.ParameterList]) -> torch.Tensor: ...
+    def forward(self, posterior_params: nn.ParameterDict, prior_parmeter: Optional[nn.ParameterDict]) -> torch.Tensor: ...
 class NormLogVarKLLoss(VarKLLoss):
     def __init__(self):
         super().__init__()
-    def forward(self, posterior_params: nn.ParameterList, prior_parmeter: Optional[nn.ParameterList] = None) -> torch.Tensor: 
+    def forward(self, posterior_params: nn.ParameterDict, prior_parmeter: Optional[nn.ParameterDict] = None) -> torch.Tensor: 
         
         k1 = torch.tensor(0.63576)
         k2 = torch.tensor(1.87320)
