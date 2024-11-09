@@ -1,20 +1,36 @@
-# Neural network's pruning using bayessian approach
+# Bayessian approach in neural networks for model pruning
 
-Model pruning is ... . It allows to save memory and makes models less redundant. Several pruning technics include *dropout*, [optimal brain damage](), ... . We will discuss pruning in the context of three bayessian approaches to neural networks.  We will also look at the implemntation design of bayessian NNs and pruning algorithms in our [library]() based on [*pytorch*](). 
+## Intro
+
+Using deep learning in solving complex, real-world problems has become quite an engineering routine. But we should never forget about probabalistic sense of our models and loss minimization. So here, we are going to recall that probabalistic framework and extend it to the bayessian framework. Such switching will give us pleasent perks but it is not always for free.
+
+We will present 4 bayessian technics to envelope any task involving neural networks. As an application, we will show how this approaches can help prune our models. We will also look at the implemntation design of *bayessian NN*s and pruning algorithms in our [library]() based on [*pytorch*](). 
 
 ## Making neural network bayessian
 
-The usual problem setup in ML consist minimizing the loss function $L$ between the train targets $y$ and model's output $f_{\mathbf{w}}(\mathbf{x})$. The model is some neural network parameterized by $\mathbf{w}$. Actually, the loss together with the model define data's distribution $p(y | \mathbf{x}, \mathbf{w})$. Minimizing the loss w.r.t. $\mathbf{w}$ is equavilent to finding maximum liklyhood estimation of model's parameters.
+The usual ML problem setup consist in minimizing the loss function $L$ between the train targets $y$ and model's output $f_{\mathbf{w}}(\mathbf{x})$. The model is some neural network parameterized by $\mathbf{w}$. Actually, the loss together with the model define data's distribution $p(y | \mathbf{x}, \mathbf{w})$. Minimizing the loss w.r.t. $\mathbf{w}$ is equavilent to finding maximum liklyhood estimation of model's parameters.
 
-Now we introduce a prior distribtion on paramters $p(\mathbf{w} | \Theta)$ which is generally parameterized by *hyperparameters* $\Theta$ (but it can be fixed distribution too). It kind of changes the game because now target distribution for a new object $\hat{\mathbf{x}}$ is
+Now we introduce a prior distribtion on paramters: $p(\mathbf{w} | \Theta)$ . It is generally parameterized by *hyperparameters* $\Theta$ (but it can be fixed distribution too). It kind of changes the game because now target distribution for a **new** object $\hat{\mathbf{x}}$ is
 
 $$
-    p(y | \hat{\mathbf{x}}, \Theta) = \mathbb{E}_{p(\mathbf{w} | y, \mathbf{x}, \Theta)} [p(y | \hat{\mathbf{x}}, \mathbf{w})] ,
+    p(y | \hat{\mathbf{x}}, \Theta) = \mathbb{E}_{p(\mathbf{w} | y, \mathbf{x}, \Theta)} [p(y | \hat{\mathbf{x}}, \mathbf{w})] , \label{new_point}\tag{1}
 $$
 
 where $p(\mathbf{w} | y, \mathbf{x}, \Theta)$ is *posterior* distribution of the model's parameters based on the train data. Unfortunately, in case of the NNs finfing the posterior is typically intractable. That leads to the intractability of the prediction. Another problem here is how to choose optimal hyperparameters $\Theta$ if we don't know them from some prior knowledge.
 
+## Why Bayes may be useful?
+
+In spite of the analytical difficulties, bayessian framework has lot to give. You've might already heard that [*L2 regularization*]() is equal to simple gaussian prior, and impose a greate computation stability during training. Futhermore, *pruning* of large nets is possible using the very same gaussian or more sparsity-inducing priors (e.g. [Laplace prior]()). 
+
+The formula ($\ref{new_point}$) implies [*ansambling*]() your model to evaluate prediction for a new data point. It may correct the model if it uses fixed trained weights.
+
+Bayes can also be used to perform [model selection](). In the end, it may be just unavoidable :), see [*hidden state models*]() and learning *mixture of gaussians* [example](). 
+
+We have provided only a handful of applications, but this might be enough to start with. Now we will go through methods that will proof utility of the given theory.
+
 ## MCMC
+
+...
 
 ## Variational inference
 
