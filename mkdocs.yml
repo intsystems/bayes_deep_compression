@@ -1,0 +1,25 @@
+site_name: Bayes Deep Compression
+
+theme:
+  name: material
+
+markdown_extensions:
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+
+plugins:
+- mkdocstrings:
+    default_handler: python
+
+nav:
+  - Home: index.md
+  - User Guide: variational/how_to_use.md
+  - Examples: variational/examples.md
+  - Reference: 
+    - Bayessian NN: variational/reference/bayes_nn.md
+    - Bayessian Loss: variational/reference/bayes_nn.md
+  - Blog: blog.md
