@@ -47,13 +47,16 @@ class BayesModule(nn.Module):
             return 0
         return len(next(self.posterior_params.values()))
     def sample(self)->None:
+        param_sample_list = nn.ParameterList()
         for i in range(self.posterior_params_size):
             posteriror_args = {}
             for arg_name in self.posterior_params:
                 posteriror_args[arg_name] = self.posterior_params[arg_name][i]
             param_sample = self.posterior_distribution_cls(**posteriror_args).rsample()
+            param_sample_list.append(param_sample)
             del_attr(self.base_module, self.index_to_name[i].split("."))
             set_attr(self.base_module, self.index_to_name[i].split("."), param_sample)
+        return param_sample_list
     @property
     def device(self):
         return next(self.parameters()).device
@@ -67,17 +70,17 @@ class BayesModule(nn.Module):
     def prune(self, *args, **kwargs) -> None:
         ...
     @property
-    def posterior(self) -> torch.Tensor:
+    def posterior(self) -> td.distribution.Distribution:
         #self.params = {mus: , sigmas: }
-        self.dist = self.posterior_distribution_cls(**self.posterior_params)
-        return self.dist.sample_n()
+        dist = self.posterior_distribution_cls(**self.posterior_params)
+        return dist
     @property
-    def prior(self) -> Optional[torch.Tensor]:
+    def prior(self) -> Optional[td.distribution.Distribution]:
         #self.params = {mus: , sigmas: }
         if self.prior_distribution_cls is None:
             return None
-        self.dist = self.prior_distribution_cls(**self.prior_params)
-        return self.dist.sample_n()
+        dist = self.prior_distribution_cls(**self.prior_params)
+        return dist
 
 class BaseBayesModuleNet(nn.Module):
     def __init__(self, base_module: nn.Module, module_list: nn.ModuleList):
@@ -85,9 +88,12 @@ class BaseBayesModuleNet(nn.Module):
         self.__dict__['base_module'] = base_module
         self.module_list = module_list
     def sample(self):
+        param_sample_list = nn.ParameterList()
         for i in range(len(self.module_list)):
             if isinstance(self.module_list[i], BayesModule):
-                self.module_list[i].sample()
+                parameter_list = self.module_list[i].sample()
+                param_sample_list.append(parameter_list)
+        return param_sample_list, self.base_module
     def __get_params(self, param_name: str) -> nn.ParameterDict:
         params_dict = nn.ParameterDict()
         for i in range(len(self.module_list)):
@@ -97,7 +103,7 @@ class BaseBayesModuleNet(nn.Module):
                     if not isinstance(parameter_list, nn.ParameterList):
                         parameter_list = nn.ParameterList(parameter_list)
                     params_dict.setdefault(key, nn.ParameterList())
-                    params_dict[key].extend(parameter_list)
+                    params_dict[key].append(parameter_list)
         return params_dict
     @property
     def posterior_params(self) -> nn.ParameterDict:
@@ -140,20 +146,20 @@ class BaseBayesModuleNet(nn.Module):
     @property
     def posterior(self) -> list[torch.Tensor]:
         #self.params = {mus: , sigmas: }
-        params = []
+        posteriors = []
         for i in range(len(self.module_list)):
-            module_params = torch.Tensor()
+            module_posterior = None
             if isinstance(self.module_list[i], BayesModule):
-                module_params = self.module_list[i].posterior
-            params.append(module_params)
-        return params
+                module_posterior = self.module_list[i].posterior
+            posteriors.append(module_posterior)
+        return posteriors
     @property
     def prior(self) -> list[Optional[torch.Tensor]]:
         #self.params = {mus: , sigmas: }
-        params = []
+        priors = []
         for i in range(len(self.module_list)):
-            module_params = torch.Tensor()
+            module_prior = None
             if isinstance(self.module_list[i], BayesModule):
-                module_params = self.module_list[i].prior
-            params.append(module_params)
-        return params
+                module_prior = self.module_list[i].prior
+            priors.append(module_prior)
+        return priors

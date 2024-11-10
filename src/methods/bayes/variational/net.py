@@ -104,6 +104,13 @@ class LogNormVarDist(td.distribution.Distribution):
         else:
             batch_shape = self.param_mus.size()
         super().__init__(batch_shape, validate_args=validate_args)
+    def get_params(self) -> dict:
+        return {"param_mus": self.param_mus, "param_std_log": self.param_std_log,\
+                       "scale_mus": self.scale_mus, "scale_alphas_log": self.scale_alphas_log}
+    def prob(self, weights):
+        raise NotImplementedError()
+    def log_prob(self, weights):
+        raise NotImplementedError()
     def rsample(self, sample_shape: _size = torch.Size()) -> torch.Tensor:
         shape = self._extended_shape(sample_shape)
         param_epsilons = _standard_normal(shape, dtype=self.param_mus.dtype, device=self.param_mus.device)

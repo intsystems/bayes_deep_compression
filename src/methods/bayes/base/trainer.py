@@ -19,10 +19,12 @@ class BaseBayesTrainer(Generic[ModelT]):
         self,
         params: TrainerParams,
         report_chain: Optional[ReportChain],
-        dataset: Iterable,
+        train_dataset: Iterable,
+        eval_dataset: Iterable,
     ):
         self.report_chain = report_chain
-        self.dataset = dataset
+        self.train_dataset = train_dataset
+        self.dataset = eval_dataset
         self.params = params
 
     def train(self, *args, **kwargs) -> BaseNetDistribution[ModelT]: ...
