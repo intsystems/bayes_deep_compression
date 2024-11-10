@@ -4,10 +4,9 @@ import torch
 from torch.optim.optimizer import Optimizer
 
 from src.methods.bayes.base.optimization import BaseLoss
+from src.methods.bayes.base.distribution import BaseNetDistribution
 from src.methods.report.base import ReportChain
-
-ModelT = TypeVar("ModelT")
-
+from src.methods.bayes.base.net import ModelT
 
 @dataclass
 class TrainerParams:
@@ -15,7 +14,7 @@ class TrainerParams:
     optimizer: Optimizer
 
 
-class BaseBayesTrainer():
+class BaseBayesTrainer(Generic[ModelT]):
     def __init__(
         self,
         params: TrainerParams,
@@ -26,4 +25,4 @@ class BaseBayesTrainer():
         self.dataset = dataset
         self.params = params
 
-    def train(self, *args, **kwargs) -> None: ...
+    def train(self, *args, **kwargs) -> BaseNetDistribution[ModelT]: ...

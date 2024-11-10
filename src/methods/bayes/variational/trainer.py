@@ -6,6 +6,7 @@ from torch.optim.optimizer import Optimizer
 from tqdm.notebook import tqdm
 
 from src.methods.bayes.base.trainer import TrainerParams, BaseBayesTrainer
+from src.methods.bayes.variational.distribution import VarBayesModuleNetDistribution
 from src.methods.bayes.variational.optimization import VarKLLoss
 from src.methods.bayes.variational.net import VarBayesModuleNet
 from src.methods.report.base import ReportChain
@@ -67,7 +68,7 @@ class VarTrainerParams(TrainerParams):
     beta_KL: Optional[Beta_Shelduer] = None
 
     
-class VarBayesTrainer(BaseBayesTrainer):
+class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
     def __init__(
         self,
         params: VarTrainerParams,
@@ -76,7 +77,8 @@ class VarBayesTrainer(BaseBayesTrainer):
     ):
         super().__init__(params, report_chain, dataset)
 
-    def train(self, model: VarBayesModuleNet) -> None:
+    def train(self, model: VarBayesModuleNet) -> VarBayesModuleNetDistribution:
+        #print(model.base_module.state_dict().keys())
         val_size    = int(self.params.val_percent * len(self.dataset)) 
         train_size  = len(self.dataset) - val_size 
         train_dataset, val_dataset = torch.utils.data.random_split(self.dataset,  
@@ -97,8 +99,8 @@ class VarBayesTrainer(BaseBayesTrainer):
         val_losses = [] 
         val_accuracies = [] 
         # Train the model 
-
-
+        #print('b')
+        #print(model.base_module.state_dict().keys())
         device = model.device
         for epoch in tqdm(range(self.params.num_epochs)): 
             for i, (images, labels) in enumerate(train_loader): 
@@ -106,6 +108,7 @@ class VarBayesTrainer(BaseBayesTrainer):
                 images=images.to(device) 
                 labels=labels.to(device) 
                 fit_loss_total = 0 
+                #print(model.base_module.state_dict().keys())
                 for j in range(self.params.num_samples):
                     outputs = model(images)
                     # calculate fit loss based on mean and standard deviation of output
@@ -114,21 +117,22 @@ class VarBayesTrainer(BaseBayesTrainer):
                     KL_loss_total = self.params.kl_loss(model.posterior_params)
                     fit_loss_total = fit_loss_total + self.params.fit_loss(outputs, labels)  
                 total_loss = (fit_loss_total) / (self.params.num_samples) + float(self.params.beta) * KL_loss_total
-                
+                #print(model.base_module.state_dict().keys())
                 # Backward pass and optimization 
                 self.params.optimizer.zero_grad() 
                 total_loss.backward() 
                 self.params.optimizer.step()
+
                 if isinstance(self.params.beta, Beta_Shelduer):
                     self.params.beta.step(fit_loss_total)
                 if isinstance(self.params.beta_KL, Beta_Shelduer): 
                     self.params.beta_KL.step(KL_loss_total)  
-        
+                #print(model.base_module.state_dict().keys())
                 _, predicted = torch.max(outputs.data, 1) 
             acc = (predicted == labels).sum().item() / labels.size(0) 
             accuracies.append(acc) 
             losses.append(total_loss.item())   
-                
+            
             # Evaluate the model on the validation set 
             val_loss = 0.0
             val_acc = 0.0
@@ -159,5 +163,18 @@ class VarBayesTrainer(BaseBayesTrainer):
                 cnt_params = model.total_params()
             if(i % 10 == 0):
                 torch.save(model.state_dict(), 'model.pt')
-                
-            print(f'Epoch [{epoch+1}/{self.params.num_epochs}],Loss:{total_loss.item()}, KL Loss: {KL_loss_total}. FitLoss: {fit_loss_total / self.params.num_samples}, Validation Loss:{val_loss},Accuracy:{acc},Validation Accuracy:{val_acc}, Prune parameters: {cnt_prune_parameters}/{cnt_params}, Beta: {float(self.params.beta)}')
+            if isinstance(self.report_chain, ReportChain):
+                callback_dict = {
+                    'num_epoch': epoch+1,
+                    'total_num_epoch': self.params.num_epochs,
+                    'total_loss': total_loss.item(),
+                    'kl_loss': KL_loss_total,
+                    'fit_loss': fit_loss_total / self.params.num_samples,
+                    'accuracy': acc,
+                    'val_total_loss': val_loss,
+                    'val_accuracy': val_acc,
+                    'cnt_prune_parameters': cnt_prune_parameters,
+                    'cnt_params': cnt_params,
+                    'beta': float(self.params.beta)
+                }
+                self.report_chain.report(callback_dict)

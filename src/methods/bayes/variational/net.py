@@ -36,6 +36,11 @@ class BaseBayesVarModule(BayesModule):
         ...
     def init_prior_params_name(self) -> Optional[nn.ParameterDict]:
         ...
+    def flush_weights(self) -> None:
+        for (name, p) in list(self.base_module.named_parameters()):
+            del_attr(self.base_module, name.split("."))
+            set_attr(self.base_module, name.split("."), torch.zeros_like(p))
+
     def __init__(self, module: nn.Module) -> None:
         posterior_params: nn.ParameterDict = self.init_posterior_params_name()
         prior_params: Optional[nn.ParameterDict] = self.init_prior_params_name()
@@ -52,12 +57,13 @@ class BaseBayesVarModule(BayesModule):
         
         super().__init__(module=module, index_to_name = index_to_name, posterior_params = posterior_params, prior_params=prior_params) 
         self.dropout_mask = dropout_mask
+        self.flush_weights()
     def prune_condition(self, *args, **kwargs) -> torch.Tensor:
         ...
     def prune_args(self, i:int) -> dict[str, Any]:
         ...
 
-    def prune(self, threshold: float = -2.2) -> None:
+    def prune(self, threshold: float = -2.2, prune = True) -> None:
         for i in range(len(self.dropout_mask)):
             self.dropout_mask[i].data = 1.0 * self.prune_condition(**self.prune_args(i), threshold = threshold)
     def prune_stats(self) -> int:
@@ -74,9 +80,9 @@ class BaseBayesVarModule(BayesModule):
         ...
     def map_args(self, i:int) -> dict[str, Any]:
         ...
-    def set_map_params(self) -> None: 
+    def set_map_params(self, prune = True) -> None: 
         for i in range(len(self.posterior_params.scale_mus)):
-            pt = nn.Parameter(self.map(**self.map_args(i)))
+            pt = nn.Parameter(self.map(**self.map_args(i), prune = prune))
             #self.base_module.register_parameter(self.index_to_name[i].split("."), pt)
             #pt = torch.nn.Parameter(pt.to_sparse())
             #del_attr(self.base_module, self.index_to_name[i].split("."))
@@ -124,8 +130,11 @@ class BayesVarLogNormModule(BaseBayesVarModule):
         return scale_alphas_log <= threshold
     def prune_args(self, i:int) -> dict[str, Any]:
         return {'scale_alphas_log': self.posterior_params.scale_alphas_log[i]}
-    def map(self, scale_mus: torch.Tensor, dropout_mask: torch.Tensor, param_mus: torch.Tensor) -> torch.Tensor:
-        return scale_mus * dropout_mask * param_mus
+    def map(self, scale_mus: torch.Tensor, dropout_mask: torch.Tensor, param_mus: torch.Tensor, prune = True) -> torch.Tensor:
+        map_param = scale_mus * param_mus
+        if(prune):
+            map_param *= dropout_mask 
+        return map_param
     def map_args(self, i:int) -> dict[str, Any]:
         return {'scale_mus': self.posterior_params.scale_mus[i],
                  'dropout_mask':self.dropout_mask[i],

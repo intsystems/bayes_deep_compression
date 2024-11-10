@@ -10,7 +10,7 @@ from torch.autograd import Variable
 from src.methods.bayes.base.output import BaseOutputModel
 
 OutputT = TypeVar("OutputT", bound=BaseOutputModel)
-
+ModelT = TypeVar("ModelT")
 
 class MLPBayesModel(torch.nn.Module, Generic[OutputT]):
     def __init__(self, layer_list: list[nn.Linear]):
@@ -82,7 +82,7 @@ class BayesModule(nn.Module):
 class BaseBayesModuleNet(nn.Module):
     def __init__(self, base_module: nn.Module, module_list: nn.ModuleList):
         super().__init__()
-        self.base_module = base_module
+        self.__dict__['base_module'] = base_module
         self.module_list = module_list
     def sample(self):
         for i in range(len(self.module_list)):
@@ -119,9 +119,13 @@ class BaseBayesModuleNet(nn.Module):
     def forward(self, *args, **kwargs):
         self.sample()
         return self.base_module(*args, **kwargs)
+    def flush_weights(self) -> None:
+        ...
     def sample_model(self) -> nn.Module:
         self.sample()
-        return copy.deepcopy(self.base_module)
+        model = copy.deepcopy(self.base_module)
+        self.flush_weights()
+        return model
     def eval(self) -> None:
         self.base_module.eval()
     def train(self) -> None:
