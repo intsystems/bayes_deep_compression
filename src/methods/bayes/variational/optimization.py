@@ -4,9 +4,16 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from typing import Optional
+from dataclasses import dataclass
 
 
 class VarKLLoss(BaseLoss):
+    @dataclass
+    class AggregationResult:
+        total_loss: torch.Tensor
+        fit_loss: torch.Tensor
+        dist_loss: torch.Tensor
+
     def __init__(self):
         super().__init__()
 
@@ -16,6 +23,10 @@ class VarKLLoss(BaseLoss):
         posterior: dict[str, LogUniformVarDist],
         prior: dict[str, Optional[ParamDist]],
     ) -> torch.Tensor: ...
+
+    def aggregate(
+        self, fit_losses: list, dist_losses: list, beta: float
+    ) -> AggregationResult: ...
 class LogUniformVarKLLoss(VarKLLoss):
     def __init__(self):
         super().__init__()
@@ -49,5 +60,10 @@ class LogUniformVarKLLoss(VarKLLoss):
 
         return -KL_z + KL_w
 
-    def aggregate(self, losses: list) -> torch.Tensor:
-        return losses[0]
+    def aggregate(
+        self, fit_losses: list, dist_losses: list, beta: float
+    ) -> VarKLLoss.AggregationResult:
+        fit_loss = torch.mean(torch.stack(fit_losses))
+        dist_loss = torch.stack(dist_losses)[0]
+        total_loss = fit_loss + dist_loss
+        return VarKLLoss.AggregationResult(total_loss, fit_loss, dist_loss)

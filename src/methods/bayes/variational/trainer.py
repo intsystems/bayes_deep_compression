@@ -208,11 +208,11 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
         labels = labels.to(device)
         fit_loss_total = 0
         dist_losses = []
-
+        fit_losses = []
         for j in range(self.params.num_samples):
             param_sample_list = model.sample()
             outputs = model(objects)
-            fit_loss_total = fit_loss_total + self.params.fit_loss(outputs, labels)
+            fit_losses.append(self.params.fit_loss(outputs, labels))
             dist_losses.append(
                 self.params.dist_loss(param_sample_list, model.posterior, model.prior)
             )
@@ -220,19 +220,20 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
             if self.params.callback_losses is not None:
                 for custom_loss in self.params.callback_losses.values():
                     custom_loss.step(outputs, labels)
-        dist_loss_total = self.params.dist_loss.aggregate(dist_losses)
-        total_loss = (fit_loss_total) / (
-            self.params.num_samples
-        ) + self.params.beta * dist_loss_total
-
+        aggregation_output = self.params.dist_loss.aggregate(
+            fit_losses, dist_losses, self.params.beta
+        )
+        total_loss, fit_loss_total, dist_loss_total = (
+            aggregation_output.total_loss,
+            aggregation_output.fit_loss,
+            aggregation_output.dist_loss,
+        )
         # Backward pass and optimization
         self.params.optimizer.zero_grad()
         total_loss.backward()
         self.params.optimizer.step()
 
-        return VarBayesTrainer.TrainResult(
-            total_loss, fit_loss_total / self.params.num_samples, dist_loss_total
-        )
+        return VarBayesTrainer.TrainResult(total_loss, fit_loss_total, dist_loss_total)
 
     def __post_train_step(self, train_result: TrainResult) -> None:
         for func in self.post_train_step_func:
@@ -253,6 +254,7 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
         with torch.no_grad():
             batches = 0
             dist_losses = []
+            fit_losses = []
             for objects, labels in eval_dataset:
                 labels = labels.to(device)
                 objects = objects.to(device)
@@ -272,12 +274,22 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
                 # get basic model for evaluation
                 eval_model = net_distributon.get_model()
                 outputs = eval_model(objects)
+                for j in range(self.params.num_samples):
+                    fit_losses.append(self.params.fit_loss(outputs, labels))
 
                 batches += 1
-            dist_loss = self.params.dist_loss.aggregate(dist_losses)
+            aggregation_output = self.params.dist_loss.aggregate(
+                fit_losses, dist_losses, self.params.beta
+            )
             # calculate fit loss based on mean and standard deviation of output
-            fit_loss = fit_loss + self.params.fit_loss(outputs, labels)
-            val_loss = fit_loss + self.params.beta * dist_loss
+            aggregation_output = self.params.dist_loss.aggregate(
+                fit_losses, dist_losses, self.params.beta
+            )
+            val_total_loss, fit_loss_total, dist_loss_total = (
+                aggregation_output.total_loss,
+                aggregation_output.fit_loss,
+                aggregation_output.dist_loss,
+            )
             if self.params.callback_losses is not None:
                 for custom_loss in self.params.callback_losses.values():
                     custom_loss.step(outputs, labels)
@@ -288,9 +300,9 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
             for loss_name, custom_loss in self.params.callback_losses.items():
                 custom_losses["val_" + loss_name] = custom_loss()
         out = VarBayesTrainer.EvalResult(
-            val_loss,
-            fit_loss,
-            dist_loss,
+            val_total_loss,
+            fit_loss_total,
+            dist_loss_total,
             cnt_prune_parameters,
             cnt_params,
             custom_losses,

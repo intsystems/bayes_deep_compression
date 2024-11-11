@@ -1,9 +1,7 @@
 import torch
 import torch.nn as nn
-import torch.distributions as td
 from torch.distributions.utils import _standard_normal, broadcast_all
 from torch.distributions import constraints
-from numbers import Number
 from torch.types import _size
 from src.methods.bayes.base.distribution import ParamDist
 

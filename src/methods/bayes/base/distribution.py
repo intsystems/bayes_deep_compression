@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.distributions as td
 from torch.types import _size
 
-from abs import abstractmethod
+from abc import abstractmethod
 
 
 class ParamDist(td.distribution.Distribution):
