@@ -47,11 +47,11 @@ class BayesModule(nn.Module):
         if self.prior_distribution_cls is not None:
             for dist in self.prior.values():
                 self.prior_params.append(dist.get_params())
-    def sample(self) -> dict[str, dict[str, nn.Parameter]]:
-        param_sample_dict: dict[str, dict[str, nn.Parameter]] = {}
+    def sample(self) -> dict[str, nn.Parameter]:
+        param_sample_dict: dict[str, nn.Parameter] = {}
         for (param_name, param_posterior) in self.posterior.items():
             param_sample = param_posterior.rsample()
-            param_sample_dict[param_name] = param_sample
+            param_sample_dict[param_name] = nn.Parameter(param_sample)
             del_attr(self.base_module, param_name.split("."))
             set_attr(self.base_module, param_name.split("."), param_sample)
         return param_sample_dict 
@@ -77,7 +77,7 @@ class BaseBayesModuleNet(nn.Module):
         self.__dict__['base_module'] = base_module
         self.module_list = module_list
     def sample(self):
-        param_sample_dict: dict[str, dict[str, nn.Parameter]] = {}
+        param_sample_dict: dict[str, nn.Parameter] = {}
         for module in self.module_list:
             if isinstance(module, BayesModule):
                 parameter_dict = module.sample()
