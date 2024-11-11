@@ -1,18 +1,22 @@
 from typing import Optional
 
 import torch
-import torch.nn as nn 
-import torch.nn.functional as F
+import torch.nn as nn
 
 from .optimization import VarKLLoss
 
+
 class NormVarKLLoss(VarKLLoss):
-    def forward(self, posterior_params: nn.ParameterDict, prior_parmeter: Optional[nn.ParameterDict] = None) -> torch.Tensor:
-        """ Computes KL loss between factorized normals
+    def forward(
+        self,
+        posterior_params: nn.ParameterDict,
+        prior_parmeter: Optional[nn.ParameterDict] = None,
+    ) -> torch.Tensor:
+        """Computes KL loss between factorized normals
 
         Args:
             posterior_params (nn.ParameterList): factorized normal variational distribution
-            prior_parmeter (Optional[nn.ParameterList]): assumed fixed N($\mu$, $\sigma$) for all paramteres. 
+            prior_parmeter (Optional[nn.ParameterList]): assumed fixed N($\mu$, $\sigma$) for all paramteres.
                 As it is possible to analitically find optimal ($\mu$, $\sigma$), this parameter is ignored here.
         """
         # optimal \alpha parameters
@@ -43,5 +47,3 @@ class NormVarKLLoss(VarKLLoss):
             kl_loss += torch.sum(-0.5 + 0.5 * torch.exp(param) / sigma_opt)
 
         return kl_loss
-
-
