@@ -4,14 +4,15 @@ import torch
 import torch.nn as nn
 from torch.optim.optimizer import Optimizer
 from tqdm.notebook import tqdm
+import functools
 
 from src.methods.bayes.base.trainer import TrainerParams, BaseBayesTrainer
-from src.methods.bayes.variational.distribution import VarBayesModuleNetDistribution
+from src.methods.bayes.variational.net_distribution import VarBayesModuleNetDistribution
 from src.methods.bayes.variational.optimization import VarKLLoss
 from src.methods.bayes.variational.net import VarBayesModuleNet
 from src.methods.report.base import ReportChain
 
-class Beta_Shelduer():
+class Beta_Scheduler():
     def __init__(self, beta: float,  ref = None, *args, **kwargs) -> None:
         self.ref = self
         self.beta = beta
@@ -24,8 +25,8 @@ class Beta_Shelduer():
     def __float__(self) -> None:
         return self.ref.beta
 
-class Beta_Shelduer_Plato(Beta_Shelduer):
-    def __init__(self, beta: float = 1e-2, alpha: float = 1e-1, patience: int = 10, is_min: bool = True, threshold: float = 0.01, eps: float=1e-08, max_beta: float= 1., min_beta:float=1e-9, ref: Optional[Beta_Shelduer]= None):
+class Beta_Scheduler_Plato(Beta_Scheduler):
+    def __init__(self, beta: float = 1e-2, alpha: float = 1e-1, patience: int = 10, is_min: bool = True, threshold: float = 0.01, eps: float=1e-08, max_beta: float= 1., min_beta:float=1e-9, ref: Optional[Beta_Scheduler]= None):
         super().__init__(beta, ref)
         self.cnt_upward = 0
         self.prev_opt = None
@@ -63,9 +64,9 @@ class CallbackLoss():
         ...
     def step(self, *args, **kwargs):
         ...
-    def zero(self):
+    def zero(self) -> None:
         ...
-class CallbackLossAccuracy():
+class CallbackLossAccuracy(CallbackLoss):
     def __init__(self) -> None:
         self.sum_acc = 0
         self.samples = 0
@@ -75,7 +76,7 @@ class CallbackLossAccuracy():
         _, predicted = torch.max(output.data, 1) 
         self.sum_acc += (predicted == label).sum().item() / label.size(0)
         self.samples += 1
-    def zero(self):
+    def zero(self) -> None:
         self.sum_acc = 0
         self.samples = 0
 @dataclass
@@ -83,18 +84,19 @@ class VarTrainerParams(TrainerParams):
     fit_loss: Callable
     dist_loss: VarKLLoss
     num_samples: int
-    batch_size: int
     prune_threshold: float = -2.2
     beta: float = 0.02
-    callback_losses: Optional[dict[CallbackLoss]]
+    callback_losses: Optional[dict[CallbackLoss]] = None
 
-    
 class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
     @dataclass
     class EvalResult:
         val_loss: float
+        fit_loss: float
+        dist_loss: float
         cnt_prune_parameters: int
         cnt_params: int
+        custom_losses: dict[str, Any]
     @dataclass
     class TrainResult:
         total_loss: float
@@ -102,23 +104,22 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
         dist_loss: float
     def __init__(
         self,
-        params: TrainerParams,
+        params: VarTrainerParams,
         report_chain: Optional[ReportChain],
         train_dataset: Iterable,
         eval_dataset: Iterable,
+        post_train_step_func:  list[Callable[[BaseBayesTrainer, TrainResult], None]] = [],
     ):
-        super().__init__(params, report_chain,train_dataset, eval_dataset)
+        super().__init__(params, report_chain, train_dataset, eval_dataset)
+        self.post_train_step_func = post_train_step_func
 
     def train(self, model: VarBayesModuleNet) -> VarBayesModuleNetDistribution:
-        
         losses = [] 
-        accuracies = [] 
         val_losses = [] 
-        val_accuracies = [] 
         # Train the model 
         device = model.device
         for epoch in tqdm(range(self.params.num_epochs)): 
-            if self.callback_losses is not None:
+            if self.params.callback_losses is not None:
                 for custom_loss in self.params.callback_losses.values():
                      custom_loss.zero()
             train_num_batch = 0
@@ -126,7 +127,8 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
             train_dist_loss = 0
             train_fit_loss = 0
             for i, (objects, labels) in enumerate(self.train_dataset): 
-                train_output = self.train_step(model)
+                train_output = self.train_step(model, objects, labels)
+                self.__post_train_step(train_output)
                 losses.append(train_output.total_loss.item())   
                 train_loss += train_output.total_loss
                 train_dist_loss += train_output.dist_loss
@@ -136,12 +138,11 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
             train_dist_loss /= train_num_batch
             train_fit_loss /= train_num_batch
 
-            eval_result = self.eval()
-            val_accuracies.append(eval_result.val_accuracy) 
-            val_losses.append(eval_result.val_loss)   
-            
+            #Save model
             if(i % 10 == 0):
                 torch.save(model.state_dict(), 'model.pt')
+
+            #Train step callback
             callback_dict = {
                 'num_epoch': epoch+1,
                 'total_num_epoch': self.params.num_epochs,
@@ -149,30 +150,34 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
                 'kl_loss': train_dist_loss,
                 'fit_loss': train_fit_loss,
             }
-            if self.callback_losses is not None:
-                for loss_name, custom_loss in self.callback_losses.items():
+            if self.params.callback_losses is not None:
+                for loss_name, custom_loss in self.params.callback_losses.items():
                     callback_dict[loss_name] = custom_loss()
 
-            
-
-            callback_dict += {
+            #Eval Step
+            eval_result = self.eval(model, self.eval_dataset)
+            val_losses.append(eval_result.val_loss)   
+            #Eval step callback
+            callback_dict.update({
                 'val_total_loss': eval_result.val_loss
-                }
-            for loss_name, custom_loss in self.callback_losses.items():
-                callback_dict['val_' + loss_name] = custom_loss()
+                })
+            if self.params.callback_losses is not None:
+                for loss_name, custom_loss in self.params.callback_losses.items():
+                    callback_dict['val_' + loss_name] = custom_loss()
 
-
-            callback_dict += {
+            #Some additional information to callback
+            callback_dict.update({
                 'cnt_prune_parameters': eval_result.cnt_prune_parameters,
                 'cnt_params': eval_result.cnt_params,
                 'beta': self.params.beta,
                 'losses': losses,
                 'val_losses': val_losses,
-            }
+            })
 
+            #if is not None let's callback
             if isinstance(self.report_chain, ReportChain):
                 self.report_chain.report(callback_dict)
-    def train_step(self, model: VarBayesModuleNet) -> dict:
+    def train_step(self, model: VarBayesModuleNet, objects, labels) -> dict:
         device = model.device
         # Forward pass 
         objects=objects.to(device) 
@@ -184,9 +189,9 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
             param_sample_list = model.sample()
             outputs = model(objects)
             fit_loss_total = fit_loss_total + self.params.fit_loss(outputs, labels)  
-            dist_losses.append(self.params.dist_loss(param_sample_list, labels, model.posterior, model.prior))
+            dist_losses.append(self.params.dist_loss(param_sample_list, model.posterior, model.prior))
             
-            if self.callback_losses is not None:
+            if self.params.callback_losses is not None:
                 for custom_loss in self.params.callback_losses.values():
                      custom_loss.step(outputs, labels)
         dist_loss_total = self.params.dist_loss.aggregate(dist_losses)
@@ -196,37 +201,45 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
         self.params.optimizer.zero_grad() 
         total_loss.backward() 
         self.params.optimizer.step()
+    
         return VarBayesTrainer.TrainResult(total_loss, fit_loss_total / self.params.num_samples, dist_loss_total)
-        
-    def eval(self, model: VarBayesModuleNet) -> dict:
+    def __post_train_step(self, train_result: TrainResult) -> None:
+        for func in self.post_train_step_func:
+            func(self, train_result)
+    def eval(self, model: VarBayesModuleNet, eval_dataset) -> 'VarBayesTrainer.EvalResult':
         # Evaluate the model on the validation set 
         device = model.device
-        val_loss = 0.0
-        val_acc = 0.0
-        if self.callback_losses is not None:
+        if self.params.callback_losses is not None:
                 for custom_loss in self.params.callback_losses.values():
                      custom_loss.zero()
         with torch.no_grad():
             model.prune({'threshold': self.params.prune_threshold})
             batches = 0
-            for objects, labels in self.eval_dataset: 
+            dist_losses = []
+            for objects, labels in eval_dataset: 
                 labels=labels.to(device) 
                 objects=objects.to(device) 
-                fit_loss_total = 0 
+                fit_loss= 0 
+                for j in range(self.params.num_samples):
+                    param_sample_list = model.sample()
+                    dist_losses.append(self.params.dist_loss(param_sample_list, model.posterior, model.prior))
                 model.set_map_params()
                 outputs = model(objects)
-                KL_loss_total = self.params.kl_loss(model.posterior_params, model.prior_params)
-                # calculate fit loss based on mean and standard deviation of output
-                fit_loss_total = fit_loss_total + self.params.fit_loss(outputs, labels)  
-                total_loss = fit_loss_total + float(self.params.beta)* KL_loss_total
-                val_loss += total_loss.item() 
-                if self.callback_losses is not None:
-                    for custom_loss in self.params.callback_losses.values():
-                        custom_loss.step(outputs, labels)
+                
+                
                 batches += 1
-            val_loss /= batches
+            dist_loss = self.params.dist_loss.aggregate(dist_losses)
+            # calculate fit loss based on mean and standard deviation of output
+            fit_loss = fit_loss + self.params.fit_loss(outputs, labels)  
+            val_loss = fit_loss + self.params.beta * dist_loss
+            if self.params.callback_losses is not None:
+                for custom_loss in self.params.callback_losses.values():
+                    custom_loss.step(outputs, labels)
             cnt_prune_parameters = model.prune_stats()
             cnt_params = model.total_params()
-
-        out = VarBayesTrainer.EvalReuslt(val_acc, val_loss, cnt_prune_parameters, cnt_params)
+        custom_losses = {}
+        if self.params.callback_losses is not None:
+                for loss_name, custom_loss in self.params.callback_losses.items():
+                    custom_losses['val_' + loss_name] = custom_loss()
+        out = VarBayesTrainer.EvalResult(val_loss, fit_loss, dist_loss, cnt_prune_parameters, cnt_params, custom_losses)
         return out 
