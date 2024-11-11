@@ -5,41 +5,19 @@ from torch.distributions.utils import _standard_normal, broadcast_all
 from torch.distributions import constraints
 from numbers import Number
 from torch.types import _size
+from src.methods.bayes.base.distribution import ParamDist
 
-class ParamDist(td.distribution.Distribution):
-    @classmethod
-    def from_parameter(self, p: nn.Parameter) -> 'ParamDist':
-        ...
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-    def get_params(self) -> dict[str, nn.Parameter]: 
-        ...
-    def prob(self, weights):
-        ...
-    def log_prob(self, weights):
-        ...
-    def log_z_test(self):
-        return torch.log(self.mean()) - torch.log(self.variance)
-    def rsample(self, sample_shape: _size = torch.Size()) -> torch.Tensor:
-        ...
-    def map(self):
-        ...
-    def mean(self):
-        ...
-    def variance(self):
-        ...
-
-class LogNormVarDist(ParamDist):
+class LogUniformVarDist(ParamDist):
     arg_constraints = {"param_mus": constraints.real, "param_std_log": constraints.real,\
                        "scale_mus": constraints.real, "scale_alphas_log": constraints.real}
     @classmethod
-    def from_parameter(cls, p: nn.Parameter) -> 'LogNormVarDist':
+    def from_parameter(cls, p: nn.Parameter) -> 'LogUniformVarDist':
         
         param_mus = (nn.Parameter(p, requires_grad = True))
         param_std_log =(nn.Parameter(torch.log(torch.Tensor(p.shape).uniform_(1e-8, 1e-2)), requires_grad = True)) #(0, 0.01)
         scale_mus = (nn.Parameter(torch.ones_like(p), requires_grad = True))
         scale_alphas_log = (nn.Parameter(torch.Tensor(p.shape).uniform_(-4, -2), requires_grad = True)) #(-4, -2)
-        return LogNormVarDist(param_mus, param_std_log, scale_mus, scale_alphas_log)
+        return LogUniformVarDist(param_mus, param_std_log, scale_mus, scale_alphas_log)
     def __init__(self, param_mus: torch.Tensor , param_std_log: torch.Tensor ,\
                   scale_mus: torch.Tensor, scale_alphas_log: torch.Tensor , validate_args = None):
         self.param_mus: nn.Parameter = nn.Parameter(param_mus)

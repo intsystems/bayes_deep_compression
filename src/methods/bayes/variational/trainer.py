@@ -8,6 +8,7 @@ import functools
 
 from src.methods.bayes.base.trainer import TrainerParams, BaseBayesTrainer
 from src.methods.bayes.variational.net_distribution import VarBayesModuleNetDistribution
+from src.methods.bayes.base.net_distribution import BaseNetDistributionPruner
 from src.methods.bayes.variational.optimization import VarKLLoss
 from src.methods.bayes.variational.net import VarBayesModuleNet
 from src.methods.report.base import ReportChain
@@ -153,7 +154,7 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
             if self.params.callback_losses is not None:
                 for loss_name, custom_loss in self.params.callback_losses.items():
                     callback_dict[loss_name] = custom_loss()
-
+            
             #Eval Step
             eval_result = self.eval(model, self.eval_dataset)
             val_losses.append(eval_result.val_loss)   
@@ -177,6 +178,7 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
             #if is not None let's callback
             if isinstance(self.report_chain, ReportChain):
                 self.report_chain.report(callback_dict)
+        return VarBayesModuleNetDistribution(model.base_module, model.posterior)
     def train_step(self, model: VarBayesModuleNet, objects, labels) -> dict:
         device = model.device
         # Forward pass 
@@ -212,19 +214,27 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
         if self.params.callback_losses is not None:
                 for custom_loss in self.params.callback_losses.values():
                      custom_loss.zero()
+        net_distributon = VarBayesModuleNetDistribution(model.base_module, model.posterior)
+        net_distributon_pruner = BaseNetDistributionPruner(net_distributon)
         with torch.no_grad():
-            model.prune({'threshold': self.params.prune_threshold})
+            
             batches = 0
             dist_losses = []
             for objects, labels in eval_dataset: 
                 labels=labels.to(device) 
                 objects=objects.to(device) 
                 fit_loss= 0 
+                #Sampling model's parameters to evaluate distance between variational and prior
                 for j in range(self.params.num_samples):
-                    param_sample_list = model.sample()
+                    param_sample_list = net_distributon.sample_params()
                     dist_losses.append(self.params.dist_loss(param_sample_list, model.posterior, model.prior))
-                model.set_map_params()
-                outputs = model(objects)
+                
+                #Set model parameters to map and prune it
+                net_distributon.set_map_params()
+                net_distributon_pruner.prune(self.params.prune_threshold)
+                #get basic model for evaluation
+                eval_model = net_distributon.get_model()
+                outputs = eval_model(objects)
                 
                 
                 batches += 1
@@ -235,8 +245,8 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
             if self.params.callback_losses is not None:
                 for custom_loss in self.params.callback_losses.values():
                     custom_loss.step(outputs, labels)
-            cnt_prune_parameters = model.prune_stats()
-            cnt_params = model.total_params()
+            cnt_prune_parameters = net_distributon_pruner.prune_stats()
+            cnt_params = net_distributon_pruner.total_params()
         custom_losses = {}
         if self.params.callback_losses is not None:
                 for loss_name, custom_loss in self.params.callback_losses.items():

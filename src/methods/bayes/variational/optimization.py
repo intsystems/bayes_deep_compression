@@ -1,5 +1,5 @@
 from src.methods.bayes.base.optimization import BaseLoss
-from src.methods.bayes.variational.distribution import ParamDist, LogNormVarDist
+from src.methods.bayes.variational.distribution import ParamDist, LogUniformVarDist
 import torch
 import torch.nn as nn 
 import torch.nn.functional as F
@@ -8,13 +8,12 @@ from typing import Optional
 class VarKLLoss(BaseLoss):
     def __init__(self):
         super().__init__()
-    def forward(self, param_sample_list, posterior: dict[str, LogNormVarDist], prior: Optional[dict[str, ParamDist]]) -> torch.Tensor:
+    def forward(self, param_sample_list, posterior: dict[str, LogUniformVarDist], prior: Optional[dict[str, ParamDist]]) -> torch.Tensor:
         ...
-class NormLogVarKLLoss(VarKLLoss):
+class LogUniformVarKLLoss(VarKLLoss):
     def __init__(self):
         super().__init__()
-    def forward(self, param_sample_list, posterior: dict[str, LogNormVarDist], prior: Optional[dict[str, ParamDist]]) -> torch.Tensor: 
-        
+    def forward(self, param_sample_list, posterior: dict[str, LogUniformVarDist], prior: dict[str,None]) -> torch.Tensor: 
         k1 = torch.tensor(0.63576)
         k2 = torch.tensor(1.87320)
         k3 = torch.tensor(1.48695)
