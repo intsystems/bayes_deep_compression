@@ -1,8 +1,10 @@
-from bayescomp.bayes.base.distribution import ParamDist
-from bayescomp.utils.attribute import del_attr, set_attr, get_attr
 import torch
 import torch.nn as nn
 import copy
+
+from src.methods.bayes.base.distribution import ParamDist
+from src.utils.attribute import del_attr, set_attr, get_attr
+
 
 class BaseNetDistribution:
     def __init__(
@@ -82,11 +84,13 @@ class BaseNetDistributionPruner:
         pt = pt * self.dropout_mask_dict[weight_name]
         pt = nn.Parameter(pt)
         set_attr(self.net_distribution.base_module, weight_name.split("."), pt)
+
     def set_weight_dropout_mask(self, weight_name: str, threshold: float) -> None:
         dist = self.net_distribution.weight_distribution[weight_name]
         self.dropout_mask_dict[weight_name].data = 1.0 * (
             dist.log_z_test() >= threshold
         )
+
     def prune_stats(self) -> int:
         prune_cnt = 0
         for dropout in self.dropout_mask_dict.values():

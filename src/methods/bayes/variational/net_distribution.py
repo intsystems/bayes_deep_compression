@@ -1,6 +1,6 @@
 import torch.nn as nn
-from bayescomp.bayes.base.net_distribution import BaseNetDistribution
-from bayescomp.bayes.base.distribution import ParamDist
+from src.methods.bayes.base.net_distribution import BaseNetDistribution
+from src.methods.bayes.base.distribution import ParamDist
 
 
 class VarBayesModuleNetDistribution(BaseNetDistribution):

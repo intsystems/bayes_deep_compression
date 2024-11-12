@@ -4,7 +4,7 @@ from typing import Dict, List
 import matplotlib as mpl
 import numpy as np
 from matplotlib import pyplot as plt
-from bayescomp.report.base import BasePlot
+from methods.report.base import BasePlot
 
 TICKS_FONT_SIZE = 12
 LEGEND_FONT_SIZE = 12

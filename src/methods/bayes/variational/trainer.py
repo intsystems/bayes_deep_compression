@@ -2,12 +2,13 @@ from dataclasses import dataclass
 from typing import Callable, Optional, Iterable, Any
 import torch
 from tqdm.notebook import tqdm
-from bayescomp.bayes.base.trainer import TrainerParams, BaseBayesTrainer
-from bayescomp.bayes.variational.net_distribution import VarBayesModuleNetDistribution
-from bayescomp.bayes.base.net_distribution import BaseNetDistributionPruner
-from bayescomp.bayes.variational.optimization import VarKLLoss
-from bayescomp.bayes.variational.net import VarBayesModuleNet
-from bayescomp.report.base import ReportChain
+
+from src.methods.bayes.base.trainer import TrainerParams, BaseBayesTrainer
+from src.methods.bayes.variational.net_distribution import VarBayesModuleNetDistribution
+from src.methods.bayes.base.net_distribution import BaseNetDistributionPruner
+from src.methods.bayes.variational.optimization import VarKLLoss
+from src.methods.bayes.variational.net import VarBayesModuleNet
+from src.methods.report.base import ReportChain
 
 
 class Beta_Scheduler:
@@ -232,14 +233,13 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
         total_loss.backward()
         self.params.optimizer.step()
 
-
-        #print(dict(model.named_parameters()))
-        '''
+        # print(dict(model.named_parameters()))
+        """
         for name, params in dict(model.named_parameters()).items():
             print(name)
             print(params.grad)
-        '''
-        
+        """
+
         return VarBayesTrainer.TrainResult(total_loss, fit_loss_total, dist_loss_total)
 
     def __post_train_step(self, train_result: TrainResult) -> None:

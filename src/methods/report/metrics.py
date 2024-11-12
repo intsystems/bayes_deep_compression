@@ -1,4 +1,4 @@
-from bayescomp.report.base import BaseMetric
+from src.methods.report.base import BaseMetric
 
 
 class AccuracyMetric(BaseMetric):

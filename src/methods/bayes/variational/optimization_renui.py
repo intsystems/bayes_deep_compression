@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from bayescomp.bayes.variational.distribution import ParamDist, LogUniformVarDist
+from src.methods.bayes.variational.distribution import ParamDist, LogUniformVarDist
 
 from .optimization import VarKLLoss
 

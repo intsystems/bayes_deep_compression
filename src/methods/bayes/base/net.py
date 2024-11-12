@@ -2,8 +2,9 @@ from typing import Optional
 from abc import ABC, abstractmethod
 import torch.nn as nn
 import copy
-from bayescomp.bayes.base.distribution import ParamDist
-from bayescomp.bayes.base.net_distribution import BaseNetDistribution
+
+from src.methods.bayes.base.distribution import ParamDist
+from src.methods.bayes.base.net_distribution import BaseNetDistribution
 
 
 class BayesModule(nn.Module):
@@ -11,6 +12,7 @@ class BayesModule(nn.Module):
     posterior_distribution_cls: type[ParamDist]
     is_posterior_trainable: bool
     is_prior_trainable: bool
+
     def __init__(self, module: nn.Module) -> None:
         super().__init__()
         posterior: dict[str, ParamDist] = {}
@@ -116,10 +118,12 @@ class BaseBayesModuleNet(nn.Module):
 
     def forward(self, *args, **kwargs):
         return self.base_module(*args, **kwargs)
-    def flush_weights(self) -> None: 
+
+    def flush_weights(self) -> None:
         for module in self.module_list:
             if isinstance(module, BayesModule):
                 module.flush_weights()
+
     def sample_model(self) -> nn.Module:
         self.sample()
         model = copy.deepcopy(self.base_module)
@@ -144,7 +148,7 @@ class BaseBayesModuleNet(nn.Module):
         return posteriors
 
     @property
-    def prior(self)-> dict[str, Optional[ParamDist]]:
+    def prior(self) -> dict[str, Optional[ParamDist]]:
         # self.params = {mus: , sigmas: }
         priors: dict[str, Optional[ParamDist]] = {}
         for module in self.module_list:

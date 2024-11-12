@@ -2,10 +2,11 @@ from dataclasses import dataclass
 from typing import Generic, TypeVar, Optional, Iterable
 from torch.optim.optimizer import Optimizer
 
-from bayescomp.bayes.base.net_distribution import BaseNetDistribution
-from bayescomp.report.base import ReportChain
+from src.methods.bayes.base.net_distribution import BaseNetDistribution
+from src.methods.report.base import ReportChain
 
 from abc import abstractmethod, ABC
+
 
 @dataclass
 class TrainerParams:
@@ -28,5 +29,6 @@ class BaseBayesTrainer(Generic[ModelT], ABC):
         self.report_chain = report_chain
         self.train_dataset = train_dataset
         self.eval_dataset = eval_dataset
+
     @abstractmethod
     def train(self, *args, **kwargs) -> BaseNetDistribution: ...

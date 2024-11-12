@@ -1,4 +1,4 @@
-from bayescomp.report.base import BaseReport
+from src.methods.report.base import BaseReport
 
 
 class VarBaseReport(BaseReport):

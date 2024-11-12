@@ -1,12 +1,17 @@
 import torch
 import torch.nn as nn
-from bayescomp.bayes.base.net import BayesModule, BaseBayesModuleNet
-from bayescomp.utils.attribute import del_attr, set_attr
-from bayescomp.bayes.variational.distribution import LogUniformVarDist, NormalDist, NormalReparametrizedDist
+from src.methods.bayes.base.net import BayesModule, BaseBayesModuleNet
+from src.utils.attribute import del_attr, set_attr
+from src.methods.bayes.variational.distribution import (
+    LogUniformVarDist,
+    NormalDist,
+    NormalReparametrizedDist,
+)
 
 
 class BaseBayesVarModule(BayesModule):
     is_posterior_trainable = True
+
     def flush_weights(self) -> None:
         for name, p in list(self.base_module.named_parameters()):
             del_attr(self.base_module, name.split("."))
@@ -15,6 +20,7 @@ class BaseBayesVarModule(BayesModule):
     def __init__(self, module: nn.Module) -> None:
         super().__init__(module=module)
         self.flush_weights()
+
 
 class VarBayesModuleNet(BaseBayesModuleNet):
     def __init__(self, base_module: nn.Module, module_list: nn.ModuleList):
@@ -36,7 +42,8 @@ class LogUniformVarBayesModule(BaseBayesVarModule):
         self.is_prior_trainable = False
         super().__init__(module)
 
-class NormalVarBayesModule(BaseBayesVarModule): 
+
+class NormalVarBayesModule(BaseBayesVarModule):
     def __init__(self, module: nn.Module) -> None:
         self.posterior_distribution_cls = NormalReparametrizedDist
         self.prior_distribution_cls = NormalDist
