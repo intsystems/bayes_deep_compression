@@ -5,6 +5,7 @@ from torch.optim.optimizer import Optimizer
 from bayescomp.bayes.base.net_distribution import BaseNetDistribution
 from bayescomp.report.base import ReportChain
 
+from abc import abstractmethod, ABC
 
 @dataclass
 class TrainerParams:
@@ -15,7 +16,7 @@ class TrainerParams:
 ModelT = TypeVar("ModelT")
 
 
-class BaseBayesTrainer(Generic[ModelT]):
+class BaseBayesTrainer(Generic[ModelT], ABC):
     def __init__(
         self,
         params: TrainerParams,
@@ -27,5 +28,5 @@ class BaseBayesTrainer(Generic[ModelT]):
         self.report_chain = report_chain
         self.train_dataset = train_dataset
         self.eval_dataset = eval_dataset
-
+    @abstractmethod
     def train(self, *args, **kwargs) -> BaseNetDistribution: ...

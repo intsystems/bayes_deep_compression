@@ -72,7 +72,7 @@ class BaseNetDistributionPruner:
     def prune(self, threshold: float | dict[str, float]):
         for weight_name in self.net_distribution.weight_distribution:
             weight_threshold = threshold
-            if not isinstance(weight_threshold, float):
+            if isinstance(weight_threshold, dict):
                 weight_threshold = weight_threshold[weight_name]
             self.prune_weight(weight_name, weight_threshold)
 

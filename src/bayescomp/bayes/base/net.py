@@ -1,4 +1,5 @@
 from typing import Optional
+from abc import ABC, abstractmethod
 import torch.nn as nn
 import copy
 from bayescomp.bayes.base.distribution import ParamDist
@@ -8,11 +9,12 @@ from bayescomp.bayes.base.net_distribution import BaseNetDistribution
 class BayesModule(nn.Module):
     prior_distribution_cls: Optional[ParamDist]
     posterior_distribution_cls: type[ParamDist]
-
+    is_prior_trainable: bool
     def __init__(self, module: nn.Module) -> None:
         super().__init__()
         posterior: dict[str, ParamDist] = {}
         self.prior: dict[str, Optional[ParamDist]] = {}
+
         i = 0
         # Itereate to create posterior and prior dist for each parameter
         for name, p in list(module.named_parameters()):
@@ -32,9 +34,12 @@ class BayesModule(nn.Module):
             self.posterior_params.append(nn.ParameterDict(dist.get_params()))
 
         self.prior_params = nn.ParameterList()
-        if self.prior_distribution_cls is not None:
-            for dist in self.prior.values():
-                self.prior_params.append(dist.get_params())
+        for dist in self.prior.values():
+            if isinstance(dist, ParamDist):
+                param_dict = nn.ParameterDict(dist.get_params())
+                for param in param_dict.values():
+                    param.requires_grad_(requires_grad=self.is_prior_trainable)
+                self.prior_params.append(param_dict)
 
     @property
     def posterior(self) -> dict[str, ParamDist]:
@@ -107,8 +112,10 @@ class BaseBayesModuleNet(nn.Module):
 
     def forward(self, *args, **kwargs):
         return self.base_module(*args, **kwargs)
-
-    def flush_weights(self) -> None: ...
+    def flush_weights(self) -> None: 
+        for module in self.module_list:
+            if isinstance(module, BayesModule):
+                module.flush_weights()
     def sample_model(self) -> nn.Module:
         self.sample()
         model = copy.deepcopy(self.base_module)
