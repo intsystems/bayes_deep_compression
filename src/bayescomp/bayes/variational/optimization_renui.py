@@ -48,7 +48,7 @@ class VarRenuiLoss(VarKLLoss):
         fit_losses = torch.stack(fit_losses)
         dist_losses = torch.stack(dist_losses)
 
-        stat_tensor = - beta_param * fit_losses + dist_losses
+        stat_tensor = - fit_losses + beta_param * dist_losses
 
         if self.aggregation == "sample":
             positions = F.gumbel_softmax(((1 - self.alpha) * stat_tensor.detach()), hard=True, dim=0)

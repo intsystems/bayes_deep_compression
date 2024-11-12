@@ -6,7 +6,7 @@ from bayescomp.bayes.variational.distribution import LogUniformVarDist, NormalDi
 
 
 class BaseBayesVarModule(BayesModule):
-
+    is_posterior_trainable = True
     def flush_weights(self) -> None:
         for name, p in list(self.base_module.named_parameters()):
             del_attr(self.base_module, name.split("."))

@@ -9,6 +9,7 @@ from bayescomp.bayes.base.net_distribution import BaseNetDistribution
 class BayesModule(nn.Module):
     prior_distribution_cls: Optional[ParamDist]
     posterior_distribution_cls: type[ParamDist]
+    is_posterior_trainable: bool
     is_prior_trainable: bool
     def __init__(self, module: nn.Module) -> None:
         super().__init__()
@@ -31,14 +32,17 @@ class BayesModule(nn.Module):
         # key - weight_name, value - distribution_args: nn.ParameterDict
         self.posterior_params = nn.ParameterList()
         for dist in self.posterior.values():
-            self.posterior_params.append(nn.ParameterDict(dist.get_params()))
+            param_dict = nn.ParameterDict(dist.get_params())
+            for param in param_dict.values():
+                param.requires_grad = self.is_posterior_trainable
+            self.posterior_params.append(param_dict)
 
         self.prior_params = nn.ParameterList()
         for dist in self.prior.values():
             if isinstance(dist, ParamDist):
                 param_dict = nn.ParameterDict(dist.get_params())
                 for param in param_dict.values():
-                    param.requires_grad_(requires_grad=self.is_prior_trainable)
+                    param.requires_grad = self.is_prior_trainable
                 self.prior_params.append(param_dict)
 
     @property

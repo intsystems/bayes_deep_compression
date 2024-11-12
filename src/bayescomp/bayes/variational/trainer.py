@@ -208,7 +208,6 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
         fit_loss_total = 0
         dist_losses = []
         fit_losses = []
-        #print(dict(model.named_parameters()))
         for j in range(self.params.num_samples):
             param_sample_list = model.sample()
             outputs = model(objects)
@@ -233,6 +232,14 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
         total_loss.backward()
         self.params.optimizer.step()
 
+
+        #print(dict(model.named_parameters()))
+        '''
+        for name, params in dict(model.named_parameters()).items():
+            print(name)
+            print(params.grad)
+        '''
+        
         return VarBayesTrainer.TrainResult(total_loss, fit_loss_total, dist_loss_total)
 
     def __post_train_step(self, train_result: TrainResult) -> None:
@@ -258,7 +265,6 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
             for objects, labels in eval_dataset:
                 labels = labels.to(device)
                 objects = objects.to(device)
-                fit_loss = 0
                 # Sampling model's parameters to evaluate distance between variational and prior
                 for j in range(self.params.num_samples):
                     param_sample_list = net_distributon.sample_params()
