@@ -1,3 +1,6 @@
+from abc import abstractmethod
+from dataclasses import dataclass
+
 from src.methods.bayes.base.optimization import BaseLoss
 from src.methods.bayes.variational.distribution import ParamDist, LogUniformVarDist
 import torch
@@ -6,10 +9,28 @@ import torch.nn.functional as F
 from typing import Optional
 
 class VarKLLoss(BaseLoss):
+    @dataclass
+    class AggregationResult:
+        total_loss: torch.Tensor
+        fit_loss: torch.Tensor
+        dist_loss: torch.Tensor
+
     def __init__(self):
         super().__init__()
-    def forward(self, param_sample_list, posterior: dict[str, LogUniformVarDist], prior: Optional[dict[str, ParamDist]]) -> torch.Tensor:
-        ...
+
+    @abstractmethod
+    def forward(
+        self,
+        param_sample_list: dict[str, nn.Parameter],
+        posterior: dict[str, LogUniformVarDist],
+        prior: dict[str, Optional[ParamDist]],
+    ) -> torch.Tensor: ...
+
+    @abstractmethod
+    def aggregate(
+        self, fit_losses: list, dist_losses: list, beta: float
+    ) -> AggregationResult: ...
+
 class LogUniformVarKLLoss(VarKLLoss):
     def __init__(self):
         super().__init__()

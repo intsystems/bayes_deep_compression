@@ -1,3 +1,5 @@
+from abc import abstractmethod
+
 import torch
 import torch.nn as nn 
 import torch.distributions as td
@@ -9,6 +11,8 @@ class ParamDist(td.distribution.Distribution):
         ...
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
+    
+    @abstractmethod
     def get_params(self) -> dict[str, nn.Parameter]: 
         ...
     def prob(self, weights):

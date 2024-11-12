@@ -5,7 +5,7 @@ from typing import Optional, Any
 import torch.nn as nn
 from src.methods.bayes.base.net import BayesModule, BaseBayesModuleNet
 from src.methods.bayes.base.net import del_attr, set_attr
-from src.methods.bayes.variational.distribution import LogUniformVarDist
+from src.methods.bayes.variational.distribution import LogUniformVarDist, NormalDist, NormalReparametrizedDist
 
 from torch.types import _size
 
@@ -45,9 +45,16 @@ class VarBayesModuleNet(BaseBayesModuleNet):
     def prior_params(self) -> dict[str, dict[str, nn.Parameter]]:
         return self.get_params('prior')
 
+
 class LogUniformVarBayesModule(BaseBayesVarModule): 
     def __init__(self, module: nn.Module) -> None:
         self.posterior_distribution_cls = LogUniformVarDist
         self.prior_distribution_cls = None
         super().__init__(module)
 
+
+class NormalVarBayesModule(BaseBayesVarModule): 
+    def __init__(self, module: nn.Module) -> None:
+        self.posterior_distribution_cls = NormalReparametrizedDist
+        self.prior_distribution_cls = NormalDist
+        super().__init__(module)

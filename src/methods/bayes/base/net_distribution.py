@@ -70,14 +70,17 @@ class BaseNetDistributionPruner():
             self.dropout_mask_dict[name_dist] = nn.Parameter(torch.ones_like(dist.sample()))
             
     def prune(self, threshold: float | dict[str, float]):
+        
         for weight_name in self.net_distribution.weight_distribution:
             weight_threshold = threshold
             if not isinstance(weight_threshold, float):
                 weight_threshold = weight_threshold[weight_name]
             self.prune_weight(weight_name, weight_threshold)
+
     def prune_weight(self, weight_name: str, threshold: float) -> None:
         dist = self.net_distribution.weight_distribution[weight_name]
         self.dropout_mask_dict[weight_name].data = 1.0 * (dist.log_z_test() >= threshold)
+        
     def prune_stats(self) -> int:
         prune_cnt = 0
         for dropout in self.dropout_mask_dict.values():
