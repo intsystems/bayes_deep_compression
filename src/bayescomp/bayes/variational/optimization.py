@@ -35,7 +35,7 @@ class LogUniformVarKLLoss(VarKLLoss):
         self,
         param_sample_list,
         posterior: dict[str, LogUniformVarDist],
-        prior: dict[str, None],
+        prior: dict[str, Optional[ParamDist]],
     ) -> torch.Tensor:
         k1 = torch.tensor(0.63576)
         k2 = torch.tensor(1.87320)

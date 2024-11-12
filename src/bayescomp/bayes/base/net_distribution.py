@@ -1,21 +1,8 @@
-from typing import Generic, TypeVar
-
 from bayescomp.bayes.base.distribution import ParamDist
 from bayescomp.utils.attribute import del_attr, set_attr, get_attr
 import torch
 import torch.nn as nn
 import copy
-
-
-class MLP(nn.Module):
-    def __init__(self, layer_list: list[nn.Linear], activation: list[nn.Module]):
-        self.net = nn.ModuleList(
-            nn.Sequential([layer, activation]) for layer in layer_list
-        )
-
-    def forward(self, x) -> torch.Tensor:
-        return self.net(x)
-
 
 class BaseNetDistribution:
     def __init__(

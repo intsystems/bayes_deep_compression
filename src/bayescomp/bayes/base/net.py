@@ -82,7 +82,7 @@ class BaseBayesModuleNet(nn.Module):
     def get_distr_params(
         self, param_type_name: str
     ) -> dict[str, dict[str, nn.Parameter]]:
-        params_dict = {}
+        params_dict: dict[str, dict[str, nn.Parameter]] = {}
         for module in self.module_list:
             if isinstance(module, BayesModule):
                 for key in getattr(module, param_type_name):
@@ -92,13 +92,13 @@ class BaseBayesModuleNet(nn.Module):
         return params_dict
 
     @property
-    def weights(self) -> dict[nn.Parameter]:
-        weights = {}
+    def weights(self) -> dict[str, nn.Parameter]:
+        weights: dict[str, nn.Parameter] = {}
         for module in self.module_list:
             module_posterior = None
             if isinstance(module, BayesModule):
                 module_posterior = module.weights
-            weights.update(module_posterior)
+                weights.update(module_posterior)
         return weights
 
     @property
@@ -115,30 +115,30 @@ class BaseBayesModuleNet(nn.Module):
         self.flush_weights()
         return model
 
-    def eval(self) -> None:
-        self.base_module.eval()
+    def eval(self):
+        return self.base_module.eval()
 
-    def train(self) -> None:
-        self.base_module.train()
+    def train(self):
+        return self.base_module.train()
 
     @property
     def posterior(self) -> dict[str, ParamDist]:
         # self.params = {mus: , sigmas: }
-        posteriors = {}
+        posteriors: dict[str, ParamDist] = {}
         for module in self.module_list:
             module_posterior = None
             if isinstance(module, BayesModule):
                 module_posterior = module.posterior
-            posteriors.update(module_posterior)
+                posteriors.update(module_posterior)
         return posteriors
 
     @property
-    def prior(self):
+    def prior(self)-> dict[str, Optional[ParamDist]]:
         # self.params = {mus: , sigmas: }
-        priors = {}
+        priors: dict[str, Optional[ParamDist]] = {}
         for module in self.module_list:
             module_prior = None
             if isinstance(module, BayesModule):
                 module_prior = module.prior
-            priors.update(module_prior)
+                priors.update(module_prior)
         return priors
