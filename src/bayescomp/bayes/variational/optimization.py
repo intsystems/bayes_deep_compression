@@ -1,5 +1,5 @@
-from src.methods.bayes.base.optimization import BaseLoss
-from src.methods.bayes.variational.distribution import ParamDist, LogUniformVarDist
+from bayescomp.bayes.base.optimization import BaseLoss
+from bayescomp.bayes.variational.distribution import ParamDist, LogUniformVarDist
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

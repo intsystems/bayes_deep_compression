@@ -1,13 +1,10 @@
 from itertools import cycle
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List
 
 import matplotlib as mpl
 import numpy as np
-import torch
 from matplotlib import pyplot as plt
-from torchvision.utils import make_grid
-
-from src.methods.report.base import BasePlot
+from bayescomp.report.base import BasePlot
 
 TICKS_FONT_SIZE = 12
 LEGEND_FONT_SIZE = 12

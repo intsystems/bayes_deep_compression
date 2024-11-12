@@ -1,6 +1,7 @@
 from typing import Generic, TypeVar
-from src.methods.bayes.base.distribution import ParamDist
-from src.utils.attribute import del_attr, set_attr, get_attr
+
+from bayescomp.bayes.base.distribution import ParamDist
+from bayescomp.utils.attribute import del_attr, set_attr, get_attr
 import torch
 import torch.nn as nn
 import copy

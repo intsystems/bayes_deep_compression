@@ -1,11 +1,9 @@
 from dataclasses import dataclass
 from typing import Generic, TypeVar, Optional, Iterable
-import torch
 from torch.optim.optimizer import Optimizer
 
-from src.methods.bayes.base.optimization import BaseLoss
-from src.methods.bayes.base.net_distribution import BaseNetDistribution
-from src.methods.report.base import ReportChain
+from bayescomp.bayes.base.net_distribution import BaseNetDistribution
+from bayescomp.report.base import ReportChain
 
 
 @dataclass

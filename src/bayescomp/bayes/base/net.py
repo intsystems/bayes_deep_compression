@@ -1,8 +1,8 @@
 from typing import Optional
 import torch.nn as nn
 import copy
-from src.methods.bayes.base.distribution import ParamDist
-from src.methods.bayes.base.net_distribution import BaseNetDistribution
+from bayescomp.bayes.base.distribution import ParamDist
+from bayescomp.bayes.base.net_distribution import BaseNetDistribution
 
 
 class BayesModule(nn.Module):
@@ -58,10 +58,10 @@ class BayesModule(nn.Module):
     def forward(self, *args, **kwargs):
         return self.base_module(*args, **kwargs)
 
-    def eval(self) -> None:
+    def eval(self):
         self.base_module.eval()
 
-    def train(self) -> None:
+    def train(self):
         self.base_module.train()
 
 

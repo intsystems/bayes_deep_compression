@@ -2,7 +2,7 @@ from typing import Generic, TypeVar
 
 import torch
 
-from src.methods.bayes.base.output import BaseOutputModel
+from bayescomp.bayes.base.output import BaseOutputModel
 
 
 class BaseLoss(torch.nn.Module):

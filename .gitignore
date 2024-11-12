@@ -472,3 +472,5 @@ MNIST*
 dist*
 #Identifier 
 *:Zone.Identifier
+#data
+./examples/data

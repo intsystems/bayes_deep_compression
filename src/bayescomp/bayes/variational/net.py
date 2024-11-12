@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
-from src.methods.bayes.base.net import BayesModule, BaseBayesModuleNet
-from src.utils.attribute import del_attr, set_attr
-from src.methods.bayes.variational.distribution import LogUniformVarDist
+from bayescomp.bayes.base.net import BayesModule, BaseBayesModuleNet
+from bayescomp.utils.attribute import del_attr, set_attr
+from bayescomp.bayes.variational.distribution import LogUniformVarDist
 
 
 class BaseBayesVarModule(BayesModule):
