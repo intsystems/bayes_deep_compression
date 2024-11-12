@@ -6,7 +6,7 @@ from tqdm.notebook import tqdm
 from src.methods.bayes.base.trainer import TrainerParams, BaseBayesTrainer
 from src.methods.bayes.variational.net_distribution import VarBayesModuleNetDistribution
 from src.methods.bayes.base.net_distribution import BaseNetDistributionPruner
-from src.methods.bayes.variational.optimization import VarKLLoss
+from src.methods.bayes.variational.optimization import VarDistLoss
 from src.methods.bayes.variational.net import VarBayesModuleNet
 from src.methods.report.base import ReportChain
 
@@ -100,7 +100,7 @@ class CallbackLossAccuracy(CallbackLoss):
 @dataclass
 class VarTrainerParams(TrainerParams):
     fit_loss: Callable
-    dist_loss: VarKLLoss
+    dist_loss: VarDistLoss
     num_samples: int
     prune_threshold: float = -2.2
     beta: float = 0.02

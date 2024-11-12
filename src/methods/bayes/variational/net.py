@@ -44,6 +44,10 @@ class LogUniformVarBayesModule(BaseBayesVarModule):
 
 
 class NormalVarBayesModule(BaseBayesVarModule):
+    """Envelope for nn.Modules with the same normal prior on all scalar paramters and factorized normal
+    distributions as the variational distibution on paramters. The prior is not required here as
+    its optimal form can be computed analytically.
+    """
     def __init__(self, module: nn.Module) -> None:
         self.posterior_distribution_cls = NormalReparametrizedDist
         self.prior_distribution_cls = NormalDist
