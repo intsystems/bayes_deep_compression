@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from typing import Optional
 from dataclasses import dataclass
-
+from abc import abstractmethod
 
 class VarKLLoss(BaseLoss):
     @dataclass
@@ -16,14 +16,14 @@ class VarKLLoss(BaseLoss):
 
     def __init__(self):
         super().__init__()
-
+    @abstractmethod
     def forward(
         self,
         param_sample_list: dict[str, nn.Parameter],
         posterior: dict[str, LogUniformVarDist],
         prior: dict[str, Optional[ParamDist]],
     ) -> torch.Tensor: ...
-
+    @abstractmethod
     def aggregate(
         self, fit_losses: list, dist_losses: list, beta: float
     ) -> AggregationResult: ...
@@ -40,7 +40,7 @@ class LogUniformVarKLLoss(VarKLLoss):
         k1 = torch.tensor(0.63576)
         k2 = torch.tensor(1.87320)
         k3 = torch.tensor(1.48695)
-        KL_z = 0
+        KL_z = torch.tensor(0)
         for dist in posterior.values():
             KL_z_element = (
                 k1 * F.sigmoid(k2 + k3 * dist.scale_alphas_log)
@@ -48,7 +48,7 @@ class LogUniformVarKLLoss(VarKLLoss):
                 - k1
             )
             KL_z = KL_z + KL_z_element.sum()
-        KL_w = 0
+        KL_w = torch.tensor(0)
         for dist in posterior.values():
             KL_w_element = 0.5 * (
                 torch.log(1 / torch.exp(dist.param_std_log) ** 2)
@@ -65,5 +65,5 @@ class LogUniformVarKLLoss(VarKLLoss):
     ) -> VarKLLoss.AggregationResult:
         fit_loss = torch.mean(torch.stack(fit_losses))
         dist_loss = torch.stack(dist_losses)[0]
-        total_loss = fit_loss + dist_loss
+        total_loss = fit_loss + beta * dist_loss
         return VarKLLoss.AggregationResult(total_loss, fit_loss, dist_loss)

@@ -200,7 +200,7 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
                 self.report_chain.report(callback_dict)
         return VarBayesModuleNetDistribution(model.base_module, model.posterior)
 
-    def train_step(self, model: VarBayesModuleNet, objects, labels) -> dict:
+    def train_step(self, model: VarBayesModuleNet, objects, labels) -> TrainResult:
         device = model.device
         # Forward pass
         objects = objects.to(device)
@@ -208,6 +208,7 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
         fit_loss_total = 0
         dist_losses = []
         fit_losses = []
+        #print(dict(model.named_parameters()))
         for j in range(self.params.num_samples):
             param_sample_list = model.sample()
             outputs = model(objects)

@@ -12,7 +12,7 @@ class BayesModule(nn.Module):
     def __init__(self, module: nn.Module) -> None:
         super().__init__()
         posterior: dict[str, ParamDist] = {}
-        self.prior: dict[str, ParamDist] = {}
+        self.prior: dict[str, Optional[ParamDist]] = {}
         i = 0
         # Itereate to create posterior and prior dist for each parameter
         for name, p in list(module.named_parameters()):
