@@ -27,9 +27,11 @@ class BayesModule(nn.Module):
             if self.prior_distribution_cls is not None:
                 self.prior[name] = self.prior_distribution_cls.from_parameter(p)
             i += 1
+        # BaseNetDistribution - это не Module
         self.net_distribution = BaseNetDistribution(module, weight_distribution=posterior)
         
         #key - weight_name, value - distribution_args: nn.ParameterDict  
+        # чтобы градиенты текли к параметрам распределения
         self.posterior_params = nn.ParameterList()
         for dist in self.posterior.values():
             self.posterior_params.append(nn.ParameterDict(dist.get_params()))

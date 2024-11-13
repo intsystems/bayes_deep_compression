@@ -46,6 +46,7 @@ class BaseNetDistribution():
             #pt = torch.nn.Parameter(pt.to_sparse())
             set_attr(self.base_module, param_name.split("."), pt)
     def set_params(self) -> None: 
+        # TODO: why do we need this method?
         for param_name, dist in self.weight_distribution.items():
             pt = dist.mean()
             #pt = torch.nn.Parameter(pt.to_sparse())

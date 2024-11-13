@@ -5,3 +5,5 @@ methods
 разные подмодули оборачивать и смотреть градиенты
 тренер
 
+params: dict[str, ParamDist]
+net_distibution
