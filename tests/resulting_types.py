@@ -10,14 +10,16 @@ from dataclasses import dataclass, fields
 
 import torch
 
+
 @dataclass
 class BaseModelOutput:
     """
     Base class for bayessian model output
 
-    Args:   
+    Args:
         :output: result of model applying to inputs
     """
+
     outputs: torch.Tensor
 
     def __post_init__(self):
@@ -29,9 +31,10 @@ class BaseModelOutput:
         For fast get list of fields names
         """
         return self.names
-    
+
     def __getitem__(self, name):
         return self.__getattribute__(name)
+
 
 @dataclass
 class LogNormalLossModelOutput(BaseModelOutput):
@@ -46,6 +49,7 @@ class LogNormalLossModelOutput(BaseModelOutput):
     prior_likelihood: torch.Tensor
     posterior_likelihood: torch.Tensor
 
+
 @dataclass
 class KLLossModelOutput(BaseModelOutput):
     """
@@ -53,4 +57,5 @@ class KLLossModelOutput(BaseModelOutput):
     Args:
         :kullback_leubler: KulbackLeibler Divergence of model parameters
     """
+
     kullback_leubler: torch.Tensor

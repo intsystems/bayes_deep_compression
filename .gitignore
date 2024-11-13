@@ -469,6 +469,8 @@ TSWLatexianTemp*
 #*Notes.bib
 
 MNIST*
-dist*
-#Identifier 
+
+#Identifier
 *:Zone.Identifier
+#data
+./examples/data

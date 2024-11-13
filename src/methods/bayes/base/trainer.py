@@ -1,19 +1,22 @@
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Generic, TypeVar, Optional, Iterable
-import torch
-from torch.optim.optimizer import Optimizer
+from typing import Generic, Iterable, Optional, TypeVar
 
-from src.methods.bayes.base.optimization import BaseLoss
 from src.methods.bayes.base.net_distribution import BaseNetDistribution
 from src.methods.report.base import ReportChain
+from torch.optim.optimizer import Optimizer
+
 
 @dataclass
 class TrainerParams:
     num_epochs: int
     optimizer: Optimizer
 
+
 ModelT = TypeVar("ModelT")
-class BaseBayesTrainer(Generic[ModelT]):
+
+
+class BaseBayesTrainer(Generic[ModelT], ABC):
     def __init__(
         self,
         params: TrainerParams,
@@ -25,6 +28,7 @@ class BaseBayesTrainer(Generic[ModelT]):
         self.report_chain = report_chain
         self.train_dataset = train_dataset
         self.eval_dataset = eval_dataset
-        
 
-    def train(self, *args, **kwargs) -> BaseNetDistribution: ...
+    @abstractmethod
+    def train(self, *args, **kwargs) -> BaseNetDistribution:
+        ...

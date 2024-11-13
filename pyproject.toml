@@ -1,13 +1,30 @@
 [tool.poetry]
-package-mode = false
+package-mode = true
+name = "src"
+version = "0.1.0"
+description = ""
+authors = ["_"]
+license = "MIT"
+readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
 numpy = "^2.1.1"
 pandas = "^2.2.3"
-torch = "^2.4"
+torch = "^2.5"
 matplotlib = "^3.9.2"
+torchvision = "^0.20.1"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 110
+target-version = ["py39"]
+
+[tool.isort]
+src_paths = ["ds_project"]
+profile = "black"
+line_length = 110
+lines_after_imports = 2

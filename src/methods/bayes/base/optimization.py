@@ -1,8 +1,9 @@
-from typing import Generic, TypeVar
+from abc import ABC, abstractmethod
 
 import torch
 
-from src.methods.bayes.base.output import BaseOutputModel
 
-class BaseLoss(torch.nn.Module):
-    def forward(self, *args, **kwargs) -> torch.Tensor: ...
+class BaseLoss(torch.nn.Module, ABC):
+    @abstractmethod
+    def forward(self, *args, **kwargs) -> torch.Tensor:
+        ...

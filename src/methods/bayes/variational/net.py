@@ -1,53 +1,52 @@
 import torch
-import torch.nn as nn 
-import torch.nn.functional as F
-from typing import Optional, Any
 import torch.nn as nn
-from src.methods.bayes.base.net import BayesModule, BaseBayesModuleNet
-from src.methods.bayes.base.net import del_attr, set_attr
-from src.methods.bayes.variational.distribution import LogUniformVarDist
+from src.methods.bayes.base.net import BaseBayesModuleNet, BayesModule
+from src.methods.bayes.variational.distribution import LogUniformVarDist, NormalDist, NormalReparametrizedDist
+from src.utils.attribute import del_attr, set_attr
 
-from torch.types import _size
 
-class BaseBayesVarModule(BayesModule): 
+class BaseBayesVarModule(BayesModule):
+    is_posterior_trainable = True
 
     def flush_weights(self) -> None:
-        for (name, p) in list(self.base_module.named_parameters()):
+        for name, p in list(self.base_module.named_parameters()):
             del_attr(self.base_module, name.split("."))
             set_attr(self.base_module, name.split("."), torch.zeros_like(p))
 
-    def __init__(self, module: nn.Module) -> None: 
-        super().__init__(module=module) 
-        self.dropout_mask: dict[str, torch.tensor] = {}
-        for (name, p) in list(module.named_parameters()):
-            self.dropout_mask[name] = torch.ones_like(p)
+    def __init__(self, module: nn.Module) -> None:
+        super().__init__(module=module)
         self.flush_weights()
-    def total_params(self) -> int:
-        out = sum(p.numel() for p in self.dropout_mask.values())
-        return out
-    def set_map_params(self, prune = True) -> None: 
-        for param_name, dist in self.posterior.items():
-            pt = dist.map()
-            if prune == True:
-                pt = pt * self.dropout_mask[param_name]
-            pt = torch.nn.Parameter(pt)
-            #pt = torch.nn.Parameter(pt.to_sparse())
-            set_attr(self.base_module, param_name.split("."), pt)
 
 
 class VarBayesModuleNet(BaseBayesModuleNet):
     def __init__(self, base_module: nn.Module, module_list: nn.ModuleList):
         super().__init__(base_module, module_list)
+
     @property
     def posterior_params(self) -> dict[str, dict[str, nn.Parameter]]:
-        return self.get_params('posterior')
+        return self.get_params("posterior")
+
     @property
     def prior_params(self) -> dict[str, dict[str, nn.Parameter]]:
-        return self.get_params('prior')
+        return self.get_params("prior")
 
-class LogUniformVarBayesModule(BaseBayesVarModule): 
+
+class LogUniformVarBayesModule(BaseBayesVarModule):
     def __init__(self, module: nn.Module) -> None:
         self.posterior_distribution_cls = LogUniformVarDist
         self.prior_distribution_cls = None
+        self.is_prior_trainable = False
         super().__init__(module)
 
+
+class NormalVarBayesModule(BaseBayesVarModule):
+    """Envelope for nn.Modules with the same normal prior on all scalar paramters and factorized normal
+    distributions as the variational distibution on paramters. The prior is not required here as
+    its optimal form can be computed analytically.
+    """
+
+    def __init__(self, module: nn.Module) -> None:
+        self.posterior_distribution_cls = NormalReparametrizedDist
+        self.prior_distribution_cls = NormalDist
+        self.is_prior_trainable = False
+        super().__init__(module)
