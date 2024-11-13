@@ -1,7 +1,6 @@
 from typing import Tuple
 
 import numpy as np
-
 import torchvision
 
 
@@ -30,17 +29,15 @@ def load_CIFAR10(with_targets: bool = False) -> Tuple[np.ndarray, ...]:
 
     if with_targets:
         train_labels, test_labels = (
-            train_dataset.targets.numpy(), # type: ignore
-            test_dataset.targets.numpy(), # type: ignore
+            train_dataset.targets.numpy(),  # type: ignore
+            test_dataset.targets.numpy(),  # type: ignore
         )
         return train_data, test_data, train_labels, test_labels
 
     return train_data, test_data
 
 
-def _load_dataset(
-    name: str, with_targets: bool = False
-) -> Tuple[np.ndarray, ...]:
+def _load_dataset(name: str, with_targets: bool = False) -> Tuple[np.ndarray, ...]:
     if name == "mnist":
         return load_MNIST(with_targets=with_targets)
     elif name == "cifar10":
@@ -52,7 +49,6 @@ def _load_dataset(
 def load_dataset(
     name: str, flatten: bool = False, binarize: bool = True, with_targets: bool = False
 ) -> Tuple[np.ndarray, ...]:
-
     dataset = _load_dataset(name, with_targets=with_targets)
 
     train_data = dataset[0]

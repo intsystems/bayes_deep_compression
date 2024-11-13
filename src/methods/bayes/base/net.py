@@ -1,8 +1,7 @@
-from typing import Optional
-from abc import ABC, abstractmethod
-import torch.nn as nn
 import copy
+from typing import Optional
 
+import torch.nn as nn
 from src.methods.bayes.base.distribution import ParamDist
 from src.methods.bayes.base.net_distribution import BaseNetDistribution
 
@@ -27,9 +26,7 @@ class BayesModule(nn.Module):
             if self.prior_distribution_cls is not None:
                 self.prior[name] = self.prior_distribution_cls.from_parameter(p)
             i += 1
-        self.net_distribution = BaseNetDistribution(
-            module, weight_distribution=posterior
-        )
+        self.net_distribution = BaseNetDistribution(module, weight_distribution=posterior)
 
         # key - weight_name, value - distribution_args: nn.ParameterDict
         self.posterior_params = nn.ParameterList()
@@ -90,9 +87,7 @@ class BaseBayesModuleNet(nn.Module):
                 param_sample_dict.update(parameter_dict)
         return param_sample_dict
 
-    def get_distr_params(
-        self, param_type_name: str
-    ) -> dict[str, dict[str, nn.Parameter]]:
+    def get_distr_params(self, param_type_name: str) -> dict[str, dict[str, nn.Parameter]]:
         params_dict: dict[str, dict[str, nn.Parameter]] = {}
         for module in self.module_list:
             if isinstance(module, BayesModule):

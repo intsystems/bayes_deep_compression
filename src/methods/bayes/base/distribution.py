@@ -1,36 +1,50 @@
-import torch
-import torch.nn as nn
-import torch.distributions as D
-from torch.types import _size
+from abc import ABC, abstractmethod
 
-from abc import abstractmethod, ABC
+import torch
+import torch.distributions as D
+import torch.nn as nn
+from torch.types import _size
 
 
 class ParamDist(D.distribution.Distribution, ABC):
-    
     @classmethod
     @abstractmethod
-    def from_parameter(self, p: nn.Parameter) -> "ParamDist": ...
+    def from_parameter(self, p: nn.Parameter) -> "ParamDist":
+        ...
+
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
     @abstractmethod
-    def get_params(self) -> dict[str, nn.Parameter]: ...
+    def get_params(self) -> dict[str, nn.Parameter]:
+        ...
+
     @abstractmethod
-    def prob(self, weights): ...
+    def prob(self, weights):
+        ...
+
     @abstractmethod
-    def log_prob(self, weights): ...
+    def log_prob(self, weights):
+        ...
+
     @abstractmethod
     def log_z_test(self):
         return torch.log(torch.abs(self.mean)) - torch.log(self.variance)
 
     @abstractmethod
-    def rsample(self, sample_shape: _size = torch.Size()) -> torch.Tensor: ...
+    def rsample(self, sample_shape: _size = torch.Size()) -> torch.Tensor:
+        ...
+
     @property
     @abstractmethod
-    def map(self): ...
+    def map(self):
+        ...
+
     @property
     @abstractmethod
-    def mean(self): ...
+    def mean(self):
+        ...
+
     @abstractmethod
-    def variance(self): ...
+    def variance(self):
+        ...

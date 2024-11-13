@@ -1,11 +1,10 @@
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Generic, TypeVar, Optional, Iterable
-from torch.optim.optimizer import Optimizer
+from typing import Generic, Iterable, Optional, TypeVar
 
 from src.methods.bayes.base.net_distribution import BaseNetDistribution
 from src.methods.report.base import ReportChain
-
-from abc import abstractmethod, ABC
+from torch.optim.optimizer import Optimizer
 
 
 @dataclass
@@ -31,4 +30,5 @@ class BaseBayesTrainer(Generic[ModelT], ABC):
         self.eval_dataset = eval_dataset
 
     @abstractmethod
-    def train(self, *args, **kwargs) -> BaseNetDistribution: ...
+    def train(self, *args, **kwargs) -> BaseNetDistribution:
+        ...

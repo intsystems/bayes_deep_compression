@@ -1,12 +1,8 @@
 import torch
 import torch.nn as nn
-from src.methods.bayes.base.net import BayesModule, BaseBayesModuleNet
+from src.methods.bayes.base.net import BaseBayesModuleNet, BayesModule
+from src.methods.bayes.variational.distribution import LogUniformVarDist, NormalDist, NormalReparametrizedDist
 from src.utils.attribute import del_attr, set_attr
-from src.methods.bayes.variational.distribution import (
-    LogUniformVarDist,
-    NormalDist,
-    NormalReparametrizedDist,
-)
 
 
 class BaseBayesVarModule(BayesModule):
@@ -48,6 +44,7 @@ class NormalVarBayesModule(BaseBayesVarModule):
     distributions as the variational distibution on paramters. The prior is not required here as
     its optimal form can be computed analytically.
     """
+
     def __init__(self, module: nn.Module) -> None:
         self.posterior_distribution_cls = NormalReparametrizedDist
         self.prior_distribution_cls = NormalDist
