@@ -92,12 +92,11 @@ class LogUniformVarKLLoss(VarDistLoss):
         return VarDistLoss.AggregationResult(total_loss, fit_loss, dist_loss)
 
 
-# TODO: пофиксить
 class NormVarKLLoss(VarDistLoss):
     def forward(
         self,
-        posterior_params: nn.ParameterDict,
-        prior_parmeter: Optional[nn.ParameterDict] = None,
+        posterior: dict[str, LogUniformVarDist],
+        **kwargs
     ) -> torch.Tensor:
         r"""
         Computes KL loss between factorized normals
@@ -115,26 +114,32 @@ class NormVarKLLoss(VarDistLoss):
         n_params = 0
 
         # compute mu
-        for param in posterior_params["loc"]:
+        for param in posterior.loc:
             mu_opt += param.sum()
             n_params += param.numel()
         mu_opt /= n_params
 
         # compute sigma in two steps
-        for param in posterior_params["loc"]:
+        for param in posterior.loc:
             sigma_opt += torch.sum((param - mu_opt) ** 2) / n_params
-        for param in posterior_params["log_scale"]:
+        for param in posterior.log_scale:
             sigma_opt += torch.exp(param).sum() / n_params
 
         # compute kl-loss between posterior and prior in two steps
         kl_loss = 0
-        for param in posterior_params["loc"]:
+        for param in posterior.loc:
             kl_loss += torch.sum(0.5 * (1 / sigma_opt) * (param - mu_opt) ** 2)
-        for param in posterior_params["log_scale"]:
+        for param in posterior.log_scale:
             kl_loss += -0.5 * param.sum() + param.numel() * 0.5 * torch.log(sigma_opt)
             kl_loss += torch.sum(-0.5 + 0.5 * torch.exp(param) / sigma_opt)
 
         return kl_loss
+    
+    def aggregate(self, fit_losses: list, dist_losses: list, beta: float) -> VarDistLoss.AggregationResult:
+        fit_loss = torch.mean(torch.stack(fit_losses))
+        dist_loss = torch.stack(dist_losses)[0]
+        total_loss = fit_loss + beta * dist_loss
+        return VarDistLoss.AggregationResult(total_loss, fit_loss, dist_loss)
 
 
 class VarRenuiLoss(VarDistLoss):

@@ -20,10 +20,6 @@ class ParamDist(D.distribution.Distribution, ABC):
         ...
 
     @abstractmethod
-    def prob(self, weights):
-        ...
-
-    @abstractmethod
     def log_prob(self, weights):
         ...
 

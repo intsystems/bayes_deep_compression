@@ -70,9 +70,6 @@ class LogUniformVarDist(ParamDist):
     def variance(self):
         raise NotImplementedError()
 
-    def prob(self, weights):
-        raise NotImplementedError()
-
     def log_prob(self, weights):
         raise NotImplementedError()
 
@@ -116,9 +113,6 @@ class NormalDist(D.Normal, ParamDist):
     def log_z_test(self):
         return -self.scale_alphas_log
 
-    def prob(self, weights):
-        raise NotImplementedError()
-
 
 class NormalReparametrizedDist(D.Normal, ParamDist):
     @classmethod
@@ -139,21 +133,23 @@ class NormalReparametrizedDist(D.Normal, ParamDist):
     @property
     def scale(self):
         return F.softplus(self._scale)
+    
+    @property
+    def log_scale(self):
+        return torch.log(self.scale)
 
     def get_params(self) -> dict[str, nn.Parameter]:
         return {"loc": self.loc, "scale": self._scale}
 
-    def rsample(self, sample_shape: _size = torch.Size()) -> torch.Tensor:
-        shape = self._extended_shape(sample_shape)
-        eps = _standard_normal(shape, dtype=self.loc.dtype, device=self.loc.device)
-        w = self.loc + eps * self.scale
-        return w
+    # Legacy
+    # def rsample(self, sample_shape: _size = torch.Size()) -> torch.Tensor:
+    #     shape = self._extended_shape(sample_shape)
+    #     eps = _standard_normal(shape, dtype=self.loc.dtype, device=self.loc.device)
+    #     w = self.loc + eps * self.scale
+    #     return w
 
     def log_z_test(self):
         return torch.log(torch.abs(self.mean)) - torch.log(self.variance)
 
     def map(self):
         return self.loc
-
-    def prob(self, weights):
-        raise NotImplementedError()
