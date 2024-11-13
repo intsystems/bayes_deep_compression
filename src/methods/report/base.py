@@ -1,5 +1,6 @@
 class BaseReport:
-    def __call__(self, callback): ...
+    def __call__(self, callback):
+        ...
 
 
 class BasePlot(BaseReport):
@@ -8,7 +9,8 @@ class BasePlot(BaseReport):
     """
 
 
-class BaseMetric(BaseReport): ...
+class BaseMetric(BaseReport):
+    ...
 
 
 class ReportChain:

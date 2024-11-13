@@ -1,14 +1,27 @@
-from src.methods.bayes.base.optimization import BaseLoss
-from src.methods.bayes.variational.distribution import ParamDist, LogUniformVarDist
+from abc import abstractmethod
+from dataclasses import dataclass
+from typing import Dict, Optional
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Optional
-from dataclasses import dataclass
-from abc import abstractmethod
+from src.methods.bayes.base.optimization import BaseLoss
+from src.methods.bayes.variational.distribution import LogUniformVarDist, ParamDist
 
 
 class VarDistLoss(BaseLoss):
+    """
+    Abstract class for Distribution losses. Your distribution loss should
+    be computed using prior and posterior classes and parameters, sampled from posterior.
+
+    In forward method loss should realize logic of loss for one sampled weights.
+
+    In aggregate method loss aggregate the data losses and distribution losses for samples.
+
+    Aggregation returns `VarDistLoss.AggregationResult`
+
+    """
+
     @dataclass
     class AggregationResult:
         total_loss: torch.Tensor
@@ -21,26 +34,34 @@ class VarDistLoss(BaseLoss):
     @abstractmethod
     def forward(
         self,
-        param_sample_list: dict[str, nn.Parameter],
-        posterior: dict[str, LogUniformVarDist],
-        prior: dict[str, Optional[ParamDist]],
-    ) -> torch.Tensor: ...
+        *,
+        param_sample_dict: Dict[str, nn.Parameter],
+        posterior: Dict[str, ParamDist],
+        prior: Dict[str, ParamDist],
+    ) -> torch.Tensor:
+        """
+        This method computes loss for one sampled parameters.
+
+        Args:
+            param_sample_dict: {param_name: nn.Parameter}
+                    sampled parameters on network.
+            posterior:  {param_name: ParamDist}
+                    posterior distribution of net parameters.
+            prior:  {param_name: ParamDist}
+                    prior distribution of net parameters.
+        """
+        ...
+
     @abstractmethod
-    def aggregate(
-        self, fit_losses: list, dist_losses: list, beta: float
-    ) -> AggregationResult: ...
+    def aggregate(self, fit_losses: list, dist_losses: list, beta: float) -> AggregationResult:
+        ...
 
 
 class LogUniformVarKLLoss(VarDistLoss):
     def __init__(self):
         super().__init__()
 
-    def forward(
-        self,
-        param_sample_list: dict[str, nn.Parameter],
-        posterior: dict[str, LogUniformVarDist],
-        prior: dict[str, Optional[ParamDist]],
-    ) -> torch.Tensor:
+    def forward(self, posterior: dict[str, LogUniformVarDist], **kwargs) -> torch.Tensor:
         k1 = torch.tensor(0.63576)
         k2 = torch.tensor(1.87320)
         k3 = torch.tensor(1.48695)
@@ -64,21 +85,22 @@ class LogUniformVarKLLoss(VarDistLoss):
 
         return -KL_z + KL_w
 
-    def aggregate(
-        self, fit_losses: list, dist_losses: list, beta: float
-    ) -> VarDistLoss.AggregationResult:
+    def aggregate(self, fit_losses: list, dist_losses: list, beta: float) -> VarDistLoss.AggregationResult:
         fit_loss = torch.mean(torch.stack(fit_losses))
         dist_loss = torch.stack(dist_losses)[0]
         total_loss = fit_loss + beta * dist_loss
         return VarDistLoss.AggregationResult(total_loss, fit_loss, dist_loss)
 
+
+# TODO: пофиксить
 class NormVarKLLoss(VarDistLoss):
     def forward(
         self,
         posterior_params: nn.ParameterDict,
         prior_parmeter: Optional[nn.ParameterDict] = None,
     ) -> torch.Tensor:
-        """Computes KL loss between factorized normals
+        r"""
+        Computes KL loss between factorized normals
 
         Args:
             posterior_params (nn.ParameterList): factorized normal variational distribution
@@ -114,37 +136,36 @@ class NormVarKLLoss(VarDistLoss):
 
         return kl_loss
 
+
 class VarRenuiLoss(VarDistLoss):
-    def __init__(self, alpha: float = -1,  aggregation: str = "weighting"):
+    """
+    Loss with Renui divergence.
+    https://arxiv.org/pdf/1602.02311v1
+    """
+
+    def __init__(self, alpha: float = -1, aggregation: str = "weighting"):
         assert aggregation in ["weighting", "sample"]
         self.alpha = alpha
         self.aggregation = aggregation
         super().__init__()
 
-    def forward(self,
-                param_sample_dict: dict[str, nn.Parameter],
-                posterior: dict[str, ParamDist],
-                prior: dict[str, ParamDist]
-            ) -> torch.Tensor:
-        """ Computes KL loss between factorized normals
+    def forward(
+        self,
+        param_sample_dict: dict[str, nn.Parameter],
+        posterior: dict[str, ParamDist],
+        prior: dict[str, ParamDist],
+    ) -> torch.Tensor:
+        prior_likelihood: torch.tensor = 0.0
+        posterior_likelihood: torch.tensor = 0.0
 
-        Args:
-            posterior_params (nn.ParameterList): factorized normal variational distribution
-            prior_parmeter (Optional[nn.ParameterList]): assumed fixed N($\mu$, $\sigma$) for all paramteres. 
-                As it is possible to analitically find optimal ($\mu$, $\sigma$), this parameter is ignored here.
-        """
-
-        prior_likelihood: torch.tensor = 0.
-        posterior_likelihood: torch.tensor = 0.
-
-        for (key,parameter), posterior_distr, prior_distr in zip(param_sample_dict.items(),
-                                                       posterior.values(),
-                                                       prior.values()):
+        for parameter, posterior_distr, prior_distr in zip(
+            param_sample_dict.values(), posterior.values(), prior.values()
+        ):
             prior_likelihood += prior_distr.log_prob(parameter).sum()
             posterior_likelihood += posterior_distr.log_prob(parameter).sum()
             # if key == "fc2.bias":
-                # print(posterior_distr.loc)
-                # print(prior_likelihood)
+            # print(posterior_distr.loc)
+            # print(prior_likelihood)
 
         return prior_likelihood - posterior_likelihood
 
@@ -152,7 +173,7 @@ class VarRenuiLoss(VarDistLoss):
         fit_losses = torch.stack(fit_losses)
         dist_losses = torch.stack(dist_losses)
 
-        stat_tensor = - fit_losses + beta_param * dist_losses
+        stat_tensor = -fit_losses + beta_param * dist_losses
 
         if self.aggregation == "sample":
             positions = F.gumbel_softmax(((1 - self.alpha) * stat_tensor.detach()), hard=True, dim=0)
@@ -164,9 +185,6 @@ class VarRenuiLoss(VarDistLoss):
         loss = -(positions * (stat_tensor)).sum()
 
         # print(loss)
-        return VarDistLoss.AggregationResult(total_loss=loss,
-                                            fit_loss=fit_losses.mean(),
-                                            dist_loss=-dist_losses.mean()
-                                            )
-    
-    
+        return VarDistLoss.AggregationResult(
+            total_loss=loss, fit_loss=fit_losses.mean(), dist_loss=-dist_losses.mean()
+        )

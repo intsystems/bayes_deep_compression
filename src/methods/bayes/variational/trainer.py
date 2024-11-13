@@ -1,14 +1,14 @@
 from dataclasses import dataclass
-from typing import Callable, Optional, Iterable, Any
-import torch
-from tqdm.notebook import tqdm
+from typing import Any, Callable, Iterable, List, Optional, Union
 
-from src.methods.bayes.base.trainer import TrainerParams, BaseBayesTrainer
-from src.methods.bayes.variational.net_distribution import VarBayesModuleNetDistribution
+import torch
 from src.methods.bayes.base.net_distribution import BaseNetDistributionPruner
-from src.methods.bayes.variational.optimization import VarDistLoss
+from src.methods.bayes.base.trainer import BaseBayesTrainer, TrainerParams
 from src.methods.bayes.variational.net import VarBayesModuleNet
+from src.methods.bayes.variational.net_distribution import VarBayesModuleNetDistribution
+from src.methods.bayes.variational.optimization import VarDistLoss
 from src.methods.report.base import ReportChain
+from tqdm.notebook import tqdm
 
 
 class Beta_Scheduler:
@@ -19,7 +19,9 @@ class Beta_Scheduler:
             self.ref = ref
             self.beta = ref.beta
 
-    def step(self, loss) -> None: ...
+    def step(self, loss) -> None:
+        ...
+
     def __float__(self) -> None:
         return self.ref.beta
 
@@ -49,9 +51,7 @@ class Beta_Scheduler_Plato(Beta_Scheduler):
         self.eps = eps
 
     def step(self, loss):
-        if (self.prev_opt is not None) and (
-            loss > self.prev_opt - abs(self.prev_opt) * self.threshold
-        ):
+        if (self.prev_opt is not None) and (loss > self.prev_opt - abs(self.prev_opt) * self.threshold):
             self.cnt_upward += 1
         else:
             self.cnt_upward = 0
@@ -73,10 +73,17 @@ class Beta_Scheduler_Plato(Beta_Scheduler):
 
 
 class CallbackLoss:
-    def __init__(self, *args, **kwargs) -> None: ...
-    def __call__(self): ...
-    def step(self, *args, **kwargs): ...
-    def zero(self) -> None: ...
+    def __init__(self, *args, **kwargs) -> None:
+        ...
+
+    def __call__(self):
+        ...
+
+    def step(self, *args, **kwargs):
+        ...
+
+    def zero(self) -> None:
+        ...
 
 
 class CallbackLossAccuracy(CallbackLoss):
@@ -129,11 +136,14 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
         report_chain: Optional[ReportChain],
         train_dataset: Iterable,
         eval_dataset: Iterable,
-        post_train_step_func: list[
-            Callable[[BaseBayesTrainer, TrainResult], None]
-        ] = [],
+        post_train_step_func: Union[None, list[Callable[[BaseBayesTrainer, TrainResult], None]]] = None,
     ):
         super().__init__(params, report_chain, train_dataset, eval_dataset)
+
+        # B8006
+        if post_train_step_func is None:
+            post_train_step_func = []
+
         self.post_train_step_func = post_train_step_func
 
     def train(self, model: VarBayesModuleNet) -> VarBayesModuleNetDistribution:
@@ -148,7 +158,7 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
             train_loss = 0
             train_dist_loss = 0
             train_fit_loss = 0
-            for i, (objects, labels) in enumerate(self.train_dataset):
+            for _, (objects, labels) in enumerate(self.train_dataset):
                 train_output = self.train_step(model, objects, labels)
                 self.__post_train_step(train_output)
                 losses.append(train_output.total_loss.item())
@@ -161,7 +171,7 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
             train_fit_loss /= train_num_batch
 
             # Save model
-            if i % 10 == 0:
+            if epoch % 10 == 0:
                 torch.save(model.state_dict(), "model.pt")
 
             # Train step callback
@@ -209,20 +219,22 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
         fit_loss_total = 0
         dist_losses = []
         fit_losses = []
-        for j in range(self.params.num_samples):
-            param_sample_list = model.sample()
+        for _ in range(self.params.num_samples):
+            param_sample_dict = model.sample()
             outputs = model(objects)
             fit_losses.append(self.params.fit_loss(outputs, labels))
             dist_losses.append(
-                self.params.dist_loss(param_sample_list, model.posterior, model.prior)
+                self.params.dist_loss(
+                    param_sample_dict=param_sample_dict,
+                    posterior=model.posterior,
+                    prior=model.prior,
+                )
             )
 
             if self.params.callback_losses is not None:
                 for custom_loss in self.params.callback_losses.values():
                     custom_loss.step(outputs, labels)
-        aggregation_output = self.params.dist_loss.aggregate(
-            fit_losses, dist_losses, self.params.beta
-        )
+        aggregation_output = self.params.dist_loss.aggregate(fit_losses, dist_losses, float(self.params.beta))
         total_loss, fit_loss_total, dist_loss_total = (
             aggregation_output.total_loss,
             aggregation_output.fit_loss,
@@ -246,17 +258,13 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
         for func in self.post_train_step_func:
             func(self, train_result)
 
-    def eval(
-        self, model: VarBayesModuleNet, eval_dataset
-    ) -> "VarBayesTrainer.EvalResult":
+    def eval(self, model: VarBayesModuleNet, eval_dataset) -> "VarBayesTrainer.EvalResult":
         # Evaluate the model on the validation set
         device = model.device
         if self.params.callback_losses is not None:
             for custom_loss in self.params.callback_losses.values():
                 custom_loss.zero()
-        net_distributon = VarBayesModuleNetDistribution(
-            model.base_module, model.posterior
-        )
+        net_distributon = VarBayesModuleNetDistribution(model.base_module, model.posterior)
         net_distributon_pruner = BaseNetDistributionPruner(net_distributon)
         with torch.no_grad():
             batches = 0
@@ -266,11 +274,13 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
                 labels = labels.to(device)
                 objects = objects.to(device)
                 # Sampling model's parameters to evaluate distance between variational and prior
-                for j in range(self.params.num_samples):
-                    param_sample_list = net_distributon.sample_params()
+                for _ in range(self.params.num_samples):
+                    param_sample_dict = net_distributon.sample_params()
                     dist_losses.append(
                         self.params.dist_loss(
-                            param_sample_list, model.posterior, model.prior
+                            param_sample_dict=param_sample_dict,
+                            posterior=model.posterior,
+                            prior=model.prior,
                         )
                     )
 
@@ -280,17 +290,13 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
                 # get basic model for evaluation
                 eval_model = net_distributon.get_model()
                 outputs = eval_model(objects)
-                for j in range(self.params.num_samples):
+                for _ in range(self.params.num_samples):
                     fit_losses.append(self.params.fit_loss(outputs, labels))
 
                 batches += 1
-            aggregation_output = self.params.dist_loss.aggregate(
-                fit_losses, dist_losses, self.params.beta
-            )
+            aggregation_output = self.params.dist_loss.aggregate(fit_losses, dist_losses, self.params.beta)
             # calculate fit loss based on mean and standard deviation of output
-            aggregation_output = self.params.dist_loss.aggregate(
-                fit_losses, dist_losses, self.params.beta
-            )
+            aggregation_output = self.params.dist_loss.aggregate(fit_losses, dist_losses, self.params.beta)
             val_total_loss, fit_loss_total, dist_loss_total = (
                 aggregation_output.total_loss,
                 aggregation_output.fit_loss,
@@ -314,3 +320,18 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
             custom_losses,
         )
         return out
+
+    def eval_thresholds(
+        self, model: VarBayesModuleNet, thresholds: List[float]
+    ) -> List["VarBayesTrainer.EvalResult"]:
+        old_thr = self.params.prune_threshold
+
+        eval_resilts = []
+        for thr in thresholds:
+            self.params.prune_threshold = thr
+            tmp_eval = self.eval(model, self.eval_dataset)
+            eval_resilts.append(tmp_eval)
+
+        self.params.prune_threshold = old_thr
+
+        return eval_resilts

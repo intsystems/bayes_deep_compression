@@ -6,11 +6,10 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from src.priors.priors import isotropic_gauss, laplace_prior
 from torch.autograd import Variable
 
-from src.priors.priors import laplace_prior, isotropic_gauss
 
-  
 def remove_from(name, *dicts_or_sets):
     for d in dicts_or_sets:
         if name in d:
@@ -18,6 +17,7 @@ def remove_from(name, *dicts_or_sets):
                 del d[name]
             else:
                 d.discard(name)
+
 
 def reset_param(mod, name, value):
     dcts = []
@@ -31,28 +31,38 @@ def reset_param(mod, name, value):
 
 
 class ModelHandler(nn.Module):
-    def __init__(self, model, prior = laplace_prior(mu=0, b=0.2), posterior = isotropic_gauss()):
+    def __init__(self, model, prior=laplace_prior(mu=0, b=0.2), posterior=isotropic_gauss()):
         super(ModelHandler, self).__init__()
-        self.mu_params = nn.ParameterList([nn.Parameter(t.new(t.size()).uniform_(-0.1, 0.1), requires_grad=True) for t in model.parameters()])    
-        self.sigma_params  = nn.ParameterList([nn.Parameter(t.new(t.size()).uniform_(-0.1, 0.1), requires_grad=True) for t in model.parameters()])
+        self.mu_params = nn.ParameterList(
+            [
+                nn.Parameter(t.new(t.size()).uniform_(-0.1, 0.1), requires_grad=True)
+                for t in model.parameters()
+            ]
+        )
+        self.sigma_params = nn.ParameterList(
+            [
+                nn.Parameter(t.new(t.size()).uniform_(-0.1, 0.1), requires_grad=True)
+                for t in model.parameters()
+            ]
+        )
         self.model = model
 
         self.param_names = self.model.state_dict().keys()
         self.prior = prior
         self.posterior = posterior
 
-    def override_params(self, with_noise = False):
-        for name, mu_tens, sigm_tens in zip(self.param_names, self.mu_params,self.sigma_params):
+    def override_params(self, with_noise=False):
+        for name, mu_tens, sigm_tens in zip(self.param_names, self.mu_params, self.sigma_params):
             # семплируем
-            lqw, lpw = 0., 0.
+            lqw, lpw = 0.0, 0.0
             if with_noise:
                 eps_tens = Variable(mu_tens.new(mu_tens.size()).normal_())
                 std_tens = 1e-6 + F.softplus(sigm_tens, beta=1, threshold=20)
-                new_tens = (mu_tens + 1 * eps_tens * std_tens)
+                new_tens = mu_tens + 1 * eps_tens * std_tens
                 # отмечаем что нужно обновлять
                 new_tens.retain_grad()
 
-            # TODO: после определения общего класса для приоров сделать возможноссть выхывать с другими классами
+                # TODO: после определения общего класса для приоров сделать возможноссть выхывать с другими классами
                 lqw += self.posterior.loglike(new_tens, mu_tens, std_tens)
                 lpw += self.prior.loglike(new_tens)
             else:
@@ -71,25 +81,30 @@ class ModelHandler(nn.Module):
 
             reset_param(a, nxt, new_tens)
         return lqw, lpw
-            
 
     def eval(self):
         if self.training:
-            self.override_params(with_noise = False)
+            self.override_params(with_noise=False)
         super().eval()
 
     def forward(self, x):
-        if not self.training:       
-            #  TODO: сейчас семплируется по последним зашумленным весам, 
+        if not self.training:
+            #  TODO: сейчас семплируется по последним зашумленным весам,
             # нужно сначала один раз поменять веса на последнюю оценку средних
-            return self.model(x), torch.tensor(0),torch.tensor(0)
-        lqw, lpw = self.override_params(with_noise= True)
+            return self.model(x), torch.tensor(0), torch.tensor(0)
+        lqw, lpw = self.override_params(with_noise=True)
         return self.model(x), lqw, lpw
 
     def loss(self, x, y):
         labels, lqw, lpw = self(x)
-        cross_entropy = F.cross_entropy(labels, y, reduction='sum')
-        loss = cross_entropy #+  (lqw - lpw)/x.shape[0] # нормируем на размер батча
+        cross_entropy = F.cross_entropy(labels, y, reduction="sum")
+        loss = cross_entropy  # +  (lqw - lpw)/x.shape[0] # нормируем на размер батча
 
         predicted_labels = torch.mean((cross_entropy.argmax(-1) == y).float())
-        return {"total": loss, "lqw": lqw, "lpw": lpw, "cross_entropy": cross_entropy, "acc": predicted_labels}
+        return {
+            "total": loss,
+            "lqw": lqw,
+            "lpw": lpw,
+            "cross_entropy": cross_entropy,
+            "acc": predicted_labels,
+        }

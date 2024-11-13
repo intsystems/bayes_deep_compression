@@ -1,15 +1,13 @@
-import torch
-import torch.nn as nn
 import copy
 
+import torch
+import torch.nn as nn
 from src.methods.bayes.base.distribution import ParamDist
-from src.utils.attribute import del_attr, set_attr, get_attr
+from src.utils.attribute import del_attr, get_attr, set_attr
 
 
 class BaseNetDistribution:
-    def __init__(
-        self, base_module: nn.Module, weight_distribution: dict[str, ParamDist]
-    ) -> None:
+    def __init__(self, base_module: nn.Module, weight_distribution: dict[str, ParamDist]) -> None:
         super().__init__()
         self.base_module: nn.Module = base_module
         self.weight_distribution: dict[str, ParamDist] = weight_distribution
@@ -49,7 +47,7 @@ class BaseNetDistribution:
             set_attr(self.base_module, param_name.split("."), pt)
 
     def __replace_with_parameters(self):
-        for param_name, dist in self.weight_distribution.items():
+        for param_name in self.weight_distribution.keys():
             pt = get_attr(self.base_module, param_name.split("."))
             pt = nn.Parameter(pt)
             set_attr(self.base_module, param_name.split("."), pt)
@@ -67,9 +65,7 @@ class BaseNetDistributionPruner:
         self.net_distribution = net_distribution
         self.dropout_mask_dict: dict[str, nn.Parameter] = {}
         for name_dist, dist in self.net_distribution.weight_distribution.items():
-            self.dropout_mask_dict[name_dist] = nn.Parameter(
-                torch.ones_like(dist.sample())
-            )
+            self.dropout_mask_dict[name_dist] = nn.Parameter(torch.ones_like(dist.sample()))
 
     def prune(self, threshold: float | dict[str, float]):
         for weight_name in self.net_distribution.weight_distribution:
@@ -87,9 +83,7 @@ class BaseNetDistributionPruner:
 
     def set_weight_dropout_mask(self, weight_name: str, threshold: float) -> None:
         dist = self.net_distribution.weight_distribution[weight_name]
-        self.dropout_mask_dict[weight_name].data = 1.0 * (
-            dist.log_z_test() >= threshold
-        )
+        self.dropout_mask_dict[weight_name].data = 1.0 * (dist.log_z_test() >= threshold)
 
     def prune_stats(self) -> int:
         prune_cnt = 0
@@ -106,4 +100,5 @@ class BaseNetEnsemble:
     def __init__(self, net_distribution: BaseNetDistribution) -> None:
         self.net_distribution = net_distribution
 
-    def predict(self): ...
+    def predict(self):
+        ...
