@@ -124,6 +124,7 @@ class BaseBayesModuleNet(nn.Module):
 
     @property
     def weights(self) -> dict[str, nn.Parameter]:
+        # TODO: почему сборка только по BayesModule? 
         weights: dict[str, nn.Parameter] = {}
         for module in self.module_list:
             module_posterior = None
