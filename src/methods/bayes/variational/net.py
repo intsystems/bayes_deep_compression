@@ -47,6 +47,6 @@ class NormalVarBayesModule(BaseBayesVarModule):
 
     def __init__(self, module: nn.Module) -> None:
         self.posterior_distribution_cls = NormalReparametrizedDist
-        self.prior_distribution_cls = NormalDist
+        self.prior_distribution_cls = None
         self.is_prior_trainable = False
         super().__init__(module)

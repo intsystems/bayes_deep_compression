@@ -19,6 +19,7 @@ class BaseNetDistribution:
         param_sample_dict: dict[str, nn.Parameter] = {}
         for param_name, param_posterior in self.weight_distribution.items():
             param_sample = param_posterior.rsample()
+            # TODO: зачем переводить в nn.Parameter?
             param_sample_dict[param_name] = nn.Parameter(param_sample)
             del_attr(self.base_module, param_name.split("."))
             set_attr(self.base_module, param_name.split("."), param_sample)

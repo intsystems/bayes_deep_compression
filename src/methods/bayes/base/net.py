@@ -112,6 +112,7 @@ class BaseBayesModuleNet(nn.Module):
         return param_sample_dict
 
     def get_distr_params(self, param_type_name: str) -> dict[str, dict[str, nn.Parameter]]:
+        # TODO: не то же самое, что и self.posterior["some_distr"].get_params() ?
         params_dict: dict[str, dict[str, nn.Parameter]] = {}
         for module in self.module_list:
             if isinstance(module, BayesModule):
