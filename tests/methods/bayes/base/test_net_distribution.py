@@ -63,4 +63,3 @@ def test_incorrect_net_distribution():
     # check that we cannot sample params
     with pytest.raises(Exception):
         net_distr.sample_model()
-
