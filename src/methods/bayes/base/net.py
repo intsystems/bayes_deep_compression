@@ -94,7 +94,9 @@ class BaseBayesModuleNet(nn.Module):
 
         Args:
             base_module (nn.Module): custom Module which is going to have some BayesModule as submodules
-            module_list (nn.ModuleList): 
+            module_list (nn.ModuleList): all submodules of the base_module supposed to be trained. This 
+                may be nn.Module or BayesModule. Such division is required because base_module is not
+                registred as Module in this class.
         """
         super().__init__()
         self.__dict__["base_module"] = base_module
