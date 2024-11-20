@@ -12,7 +12,7 @@ class BaseNetDistribution:
         self.base_module: nn.Module = base_module
         self.weight_distribution: dict[str, ParamDist] = weight_distribution
 
-    def detach(self):
+    def detach_(self):
         self.base_module = copy.deepcopy(self.base_module)
 
     def sample_params(self) -> dict[str, nn.Parameter]:
@@ -35,12 +35,6 @@ class BaseNetDistribution:
             set_attr(self.base_module, param_name.split("."), pt)
 
     def set_mean_params(self) -> None:
-        for param_name, dist in self.weight_distribution.items():
-            pt = dist.mean()
-            # pt = torch.nn.Parameter(pt.to_sparse())
-            set_attr(self.base_module, param_name.split("."), pt)
-
-    def set_params(self) -> None:
         for param_name, dist in self.weight_distribution.items():
             pt = dist.mean()
             # pt = torch.nn.Parameter(pt.to_sparse())
