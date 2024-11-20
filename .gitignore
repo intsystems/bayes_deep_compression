@@ -474,3 +474,6 @@ MNIST*
 *:Zone.Identifier
 #data
 ./examples/data
+
+# pytest
+conftest.py

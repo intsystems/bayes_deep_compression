@@ -59,6 +59,7 @@ class LogUniformVarDist(ParamDist):
             "scale_alphas_log": self.scale_alphas_log,
         }
 
+    @property
     def map(self):
         return self.scale_mus * self.param_mus
 
@@ -86,32 +87,6 @@ class LogUniformVarDist(ParamDist):
         )
         param_sample = scale_sample * (self.param_mus + param_epsilons * torch.exp(self.param_std_log))
         return param_sample
-
-
-class NormalDist(D.Normal, ParamDist):
-    @classmethod
-    def from_parameter(self, p: nn.Parameter) -> ParamDist:
-        loc = nn.Parameter(p.new(p.size()).zero_(), requires_grad=False)
-        scale = nn.Parameter(p.new(p.size()).zero_() + 0.1, requires_grad=False)
-        return NormalDist(loc, scale)
-
-    def __init__(self, loc, scale, validate_args=None):
-        super().__init__(loc, scale, validate_args=validate_args)
-        # self.loc, self._scale = D.broadcast_all(loc, scale)
-        # if isinstance(loc, Number) and isinstance(scale, Number):
-        #     batch_shape = torch.Size()
-        # else:
-        #     batch_shape = self.loc.size()
-        # D.Distribution.__init__(self, batch_shape, validate_args=validate_args)
-
-    def get_params(self) -> dict[str, nn.Parameter]:
-        return {"loc": self.loc, "scale": self.scale}
-
-    def map(self):
-        raise NotImplementedError()
-
-    def log_z_test(self):
-        return -self.scale_alphas_log
 
 
 class NormalReparametrizedDist(D.Normal, ParamDist):
