@@ -44,15 +44,15 @@ def test_simple_net_distribution(weight_dist: ParamDist, bias_dist: ParamDist):
     # set mean/map values into module
     net_distr.set_mean_params()
     for param_name in weight_distribution:
-        assert isinstance(getattr(param_name, net_distr.base_module), torch.Tensor)
+        assert isinstance(getattr(net_distr.base_module, param_name), torch.Tensor)
     net_distr.set_map_params()
     for param_name in weight_distribution:
-        assert isinstance(getattr(param_name, net_distr.base_module), torch.Tensor)
+        assert isinstance(getattr(net_distr.base_module, param_name), torch.Tensor)
 
     # build nn.Module inside net_distr
     base_module = net_distr.get_model()
     for param_name in weight_distribution:
-        assert isinstance(getattr(param_name, net_distr.base_module), nn.Parameter)
+        assert isinstance(getattr(net_distr.base_module, param_name), nn.Parameter)
 
     # build copy of nn.Module inside net_distr
     base_module_copy = net_distr.get_model_snapshot()

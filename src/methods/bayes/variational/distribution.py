@@ -126,5 +126,6 @@ class NormalReparametrizedDist(D.Normal, ParamDist):
     def log_z_test(self):
         return torch.log(torch.abs(self.mean)) - torch.log(self.variance)
 
+    @property
     def map(self):
         return self.loc
