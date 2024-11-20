@@ -9,21 +9,13 @@ from src.methods.bayes.variational.distribution import LogUniformVarDist, Normal
 from src.methods.bayes.base.net_distribution import BaseNetDistribution, BaseNetDistributionPruner, BaseNetEnsemble
 
 
-@pytest.mark.parametrize(
-        "weight_dist, bias_dist",
-        [
-            (LogUniformVarDist, LogUniformVarDist),
-            (LogUniformVarDist, NormalReparametrizedDist),
-            (NormalReparametrizedDist, LogUniformVarDist),
-            (NormalReparametrizedDist, NormalReparametrizedDist)
-        ]
-)
-def test_simple_net_distribution(weight_dist: ParamDist, bias_dist: ParamDist):
-    SHAPE = (20, 20)
+@pytest.mark.parametrize("module", [nn.Linear(20, 20), nn.Conv2d(10, 10, 3)])
+@pytest.mark.parametrize("weight_dist", [LogUniformVarDist, NormalReparametrizedDist])
+@pytest.mark.parametrize("bias_dist", [NormalReparametrizedDist, NormalReparametrizedDist])
+def test_simple_net_distribution(module: nn.Module, weight_dist: ParamDist, bias_dist: ParamDist):
     NUM_SAMPLES = 10
 
     # create net distribution
-    module = nn.Linear(*SHAPE)
     weight_distribution = {
         "weight": weight_dist.from_parameter(module.weight),
         "bias": bias_dist.from_parameter(module.bias)
@@ -58,4 +50,17 @@ def test_simple_net_distribution(weight_dist: ParamDist, bias_dist: ParamDist):
     base_module_copy = net_distr.get_model_snapshot()
     assert base_module is not base_module_copy
 
+
+def test_incorrect_net_distribution():
+    # module without parameters
+    module = nn.ReLU()
+    # create net distribution
+    weight_distribution = {
+        "weight": NormalReparametrizedDist(torch.rand(5), torch.rand(5)),
+    }
+    net_distr = BaseNetDistribution(module, weight_distribution)
+
+    # check that we cannot sample params
+    with pytest.raises(Exception):
+        net_distr.sample_model()
 
