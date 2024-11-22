@@ -476,4 +476,4 @@ MNIST*
 ./examples/data
 
 # pytest
-conftest.py
+/conftest.py
