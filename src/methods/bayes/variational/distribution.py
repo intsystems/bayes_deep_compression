@@ -99,6 +99,9 @@ class NormalReparametrizedDist(D.Normal, ParamDist):
 
     def __init__(self, loc, scale, validate_args=None):
         self.loc, self._scale = broadcast_all(loc, scale)
+        self.loc = nn.Parameter(self.loc)
+        self._scale = nn.Parameter(self._scale)
+
         if isinstance(loc, Number) and isinstance(scale, Number):
             batch_shape = torch.Size()
         else:
