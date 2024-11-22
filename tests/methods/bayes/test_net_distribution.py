@@ -1,7 +1,9 @@
 """ Testing net distribution class. It is a number of ParamDist for some module
 """
 import pytest
+from warnings import warn
 
+import numpy as np
 import torch
 import torch.nn as nn
 
@@ -63,3 +65,37 @@ def test_incorrect_net_distribution():
     # check that we cannot sample params
     with pytest.raises(Exception):
         net_distr.sample_model()
+
+
+
+@pytest.mark.parametrize("module", [nn.Linear(20, 20), nn.Conv2d(10, 10, 3)])
+@pytest.mark.parametrize("weight_dist", [LogUniformVarDist, NormalReparametrizedDist])
+@pytest.mark.parametrize("bias_dist", [NormalReparametrizedDist, NormalReparametrizedDist])
+@pytest.mark.parametrize("threshold", np.linspace(0, 1, 10).tolist() + [-1, 5])
+def test_simple_pruner(module: nn.Module, weight_dist: ParamDist, bias_dist: ParamDist, threshold: float):
+    NUM_SAMPLES = 10
+
+    # compute true value of module's parameters
+    base_module_total_params = sum([param.numel() for param in module.parameters()])
+
+    # create net distribution
+    weight_distribution = {
+        "weight": weight_dist.from_parameter(module.weight),
+        "bias": bias_dist.from_parameter(module.bias)
+    }
+    net_distr = BaseNetDistribution(module, weight_distribution)
+    # create pruner object
+    pruner = BaseNetDistributionPruner(net_distr)
+
+    # correctness check
+    assert pruner.total_params() == base_module_total_params
+
+    # prune weights of the base module inside BaseNetDistribution
+    pruner.prune(threshold)
+    if threshold < 0 or threshold > 1:
+        warn("Threshold may be inncorrect, but no exception is raised", RuntimeWarning)
+
+    # check prune statistics
+    assert pruner.total_params() == base_module_total_params
+    assert pruner.prune_stats() >= 0
+    assert pruner.prune_stats() <= pruner.total_params()
