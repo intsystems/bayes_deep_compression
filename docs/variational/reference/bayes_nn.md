@@ -1,1 +1,0 @@
-::: variational_gaussian.bayes_nn
