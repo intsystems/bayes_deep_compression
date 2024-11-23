@@ -22,4 +22,4 @@ nav:
   - Reference: 
     - Bayessian NN: variational/reference/bayes_nn.md
     - Bayessian Loss: variational/reference/bayes_nn.md
-  - Blog: blog.md
+  - Blog: blog/blog.md
