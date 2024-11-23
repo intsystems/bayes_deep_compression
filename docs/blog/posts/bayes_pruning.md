@@ -11,6 +11,10 @@ authors:
 
 # Bayesian approach in neural networks for model pruning
 
+<center>
+![Pruning NN](img/intro_img.png){width=70%}
+</center>
+
 ## Intro
 
 Using deep learning in solving complex, real-world problems has become quite an engineering routine. But we should never forget about the probabilistic sense of our models and loss minimization. So here, we are going to recall that probabilistic framework and extend it to the Bayesian framework. Such switching will give us pleasant perks but it is not always for free.
@@ -38,6 +42,11 @@ In spite of the analytical difficulties, the Bayesian framework has a lot to giv
 Some other bayes features:
 
 - The formula ($\ref{new_point}$) implies [*assembling*](https://en.wikipedia.org/wiki/Ensemble_learning) your model to evaluate prediction for a new data point. Therefore more information about true state is used in the final prediction. It also prevents models from being [*over-confident*](https://docs.giskard.ai/en/latest/knowledge/key_vulnerabilities/overconfidence/index.html).
+
+![Confidence shift](img/confidence.jpg){ width=70% }
+/// caption
+*Confidence shift after incorporating prior knowledge*
+///
 
 - Bayes can be used to perform [*model selection*](https://en.wikipedia.org/wiki/Model_selection), see [*hidden state models*](https://en.wikipedia.org/wiki/Latent_space) and learning *mixture of gaussians* [example](https://scikit-learn.org/1.5/modules/mixture.html#variational-bayesian-gaussian-mixture).
 
@@ -68,6 +77,11 @@ $$
 $$
 
 where $\text{KL}(\cdot || \cdot)$ is a [KL-divergence](https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence). Maximising it by $\phi$ and $\Theta$ gives us estimation of the optimal hyperparameters and the variational distribution.
+
+![Variational distribution](img/var_distr.webp){ width=70% }
+/// caption
+*ELBO optimization is equal to posterior fitting*
+///
 
 ### Using variational distribution
 
@@ -120,13 +134,18 @@ where $\mathbf{w}_i \sim q(\mathbf{w} | \phi)$.
 
 Ideally, the class of variational distributions indexed by $\phi$ should contain $p(\mathbf{w} | y, \mathbf{x}, \Theta)$. If $q$ is exactly posterior then the ELBO will be exactly the evidence (not just lower bound)!
 
-Practically, we don't know the exact posterior but we know it up to the normalisation. It is followed from bayesian rule:
+Practically, we don't know the exact posterior but we know it up to the normalisation. It is followed from thes bayesian rule:
 
 $$
    p(\mathbf{w} | y, \mathbf{x}, \Theta) \propto p(y | \mathbf{w}, \mathbf{x}) p(\mathbf{w} | \Theta)
 $$
 
 This can be a hint for choosing variational distributions class. So if you know that $p(\mathbf{w} | y, \mathbf{x}, \Theta)$ have some special properties, make sure that functions from $q$ class have them too (for example, multimodality).
+
+![Variational distribtion problem](img/var_dist_problems.png){ width=80% }
+/// caption
+*Unimodal variational distribution can't fit multimodal posterior*
+///
 
 ### Pruning strategy
 
@@ -156,11 +175,10 @@ $$
 
 Let's look at the visual example below. **Black** line corresponds to the exact posterior. As we can see it is multivariate gaussian with covariant components. Our variational distribution family will be factorized gaussians. We go from the <font color="cyan"> cyan circle </font> corresponding to $\alpha \to \infty$. It can be referred to as *mode-seeking* ELBO regime, our gaussian lies exactly inside true gaussian and is perfectly centred around the mode. Then, decreasing $\alpha$ to 1 we obtain <font color="violet"> violet circle </font> corresponding to conventional ELBO. After that, we get more inflated <font color="blue"> blue circle </font> with $\alpha = 0.5$ and optimal <font color="green"> green circle </font> with $\alpha = 0$. The latter corresponds to the true marginal distributions of the parameters $q (\mathbf{w}) = p(w_1 | y, x) \cdot p(w_2 | y, x)$ and gives true evidence via $\text{ELBO}_{0}$. If we decrease $\alpha$ further we switch to the so called *mass-covering* regime. The  <font color="red"> red circle </font> corresponds to $\alpha \to -\infty$. As we can see it hasn't inflated over the whole plane but has become a perfect encapsulation of the true posterior. To conclude, fitting models for different $\alpha$ is a great way to control distribution of probability mass around the true posterior.
 
-<center>
-![Approximate posterior](img/renui_posterior.png)
-
-*Posterior distributions for different* $\alpha$
-</center>
+![Approximate posterior](img/renui_posterior.png){ align=center }
+/// caption
+*Posterior distributions for different*
+///
 
 ### Renyi approximation
 
@@ -180,6 +198,13 @@ So as $p(\epsilon)$ is usually standard normal it is easy to take gradient over 
 
 The only problem here is that the new loss is actually biassed. But this bias *monotonous* vanishes with more samples. Moreover, with fixed $K$ you can play around with $\alpha$ as $\widehat{\text{ELBO}}_{\alpha}$ is *non-decreasing* in this case. Combining earlier facts we can conclude that either $\widehat{\text{ELBO}}_{\alpha} < p(y|x)$ for all $\alpha$ or their exists **optimal** $\alpha_K$ such that $\widehat{\text{ELBO}}_{\alpha_K} = p(y|x)$!
 
+![Renyi behavior](img/renui_sampled.png){ width=60% }
+/// caption
+*Illustration of how Renyi loss is changed under different variations*.
+
+$\mathcal{L}_{\alpha} = \text{ELBO}_{\alpha}$, $\mathcal{L}_{VI} = \text{ELBO}$.
+///
+
 All in all, we have paved the way to practical realisation of the approach and have given a prescription for scalar hyperparameter optimization.
 
 ## Kroneker-factorized Laplace
@@ -197,6 +222,13 @@ $$
 $$
 
 Actually, the result would be the same even if we had some fixed prior in the beginning. In this case, the likelihood function is substituted for posterior $p(\mathbf{w} | y, \mathbf{x})$. Now $\mathbf{w}^*$ is the MAP model, $H$ is the hessian of the posterior. Simple illustration of this transition is adding L2-regularization into the net's training.
+
+![Laplace approximation example](img/laplace_modes.png){ width=70% }
+/// caption
+<font color="red">Laplace approximation</font> of an <font color="blue">arbitary distribution</font>.
+
+As you can see, it is not always quite accurate.
+///
 
 ### Pruning strategy
 
