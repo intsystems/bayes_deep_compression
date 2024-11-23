@@ -1,3 +1,14 @@
+---
+date: 2024-11-23
+tags:
+  - ML
+  - DL
+  - bayes
+  - pruning
+authors:
+  - kirill
+---
+
 # Bayesian approach in neural networks for model pruning
 
 ## Intro
@@ -5,6 +16,8 @@
 Using deep learning in solving complex, real-world problems has become quite an engineering routine. But we should never forget about the probabilistic sense of our models and loss minimization. So here, we are going to recall that probabilistic framework and extend it to the Bayesian framework. Such switching will give us pleasant perks but it is not always for free.
 
 We will present 4 bayesian techniques to envelope any task involving neural networks. As an application, we will show how this approach can help prune our models. We will also look at the implementation design of *bayessian NN*s and pruning algorithms in our [library](https://github.com/intsystems/bayes_deep_compression).
+
+<!-- more -->
 
 ## Making neural network bayesian
 
