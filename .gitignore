@@ -470,3 +470,10 @@ TSWLatexianTemp*
 
 MNIST*
 dist*
+# personal
+papers
+slides
+
+# large data and models
+examples/**/data/
+examples/**/artifacts/
