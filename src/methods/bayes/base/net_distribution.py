@@ -7,15 +7,34 @@ from src.utils.attribute import del_attr, get_attr, set_attr
 
 
 class BaseNetDistribution:
+    """ 
+    Base class for distribution of nets. This class sees nets as elements of distribution.
+    It helps sample nets from this distribution or estimate statistics of distribution.
+    For this purpose it have base module architecture and distribution of parameters for 
+    each of it weights.
+    """
     def __init__(self, base_module: nn.Module, weight_distribution: dict[str, ParamDist]) -> None:
         super().__init__()
         self.base_module: nn.Module = base_module
+        """Show default architecture of module for which should evalute parameters"""
         self.weight_distribution: dict[str, ParamDist] = weight_distribution
+        """Distribution of parameter for each named parameter of base_module"""
 
     def detach(self):
+        """
+        Detach(Made deepcopy) base module from original module
+        """
         self.base_module = copy.deepcopy(self.base_module)
 
     def sample_params(self) -> dict[str, nn.Parameter]:
+        """
+        Sample only model parameter from distribution and 
+        return it.
+        
+        Returns:
+            dict[str, nn.Parameter]: Return dict of sampled parameters, where 
+                key is name of parameter, value is valeu of parameter
+        """
         param_sample_dict: dict[str, nn.Parameter] = {}
         for param_name, param_posterior in self.weight_distribution.items():
             param_sample = param_posterior.rsample()
@@ -25,6 +44,13 @@ class BaseNetDistribution:
         return param_sample_dict
 
     def sample_model(self) -> nn.Module:
+        """
+        Sample only model from distribution and 
+        return it. Note that model is the same that in base_module.
+        
+        Returns:
+            nn.Module: sampled base_module with sampled parameters
+        """
         self.sample_params()
         return self.base_module
 
