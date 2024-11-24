@@ -7,7 +7,7 @@ from src.methods.bayes.base.net_distribution import BaseNetDistribution
 
 
 class BayesModule(nn.Module):
-    prior_distribution_cls: Optional[ParamDist] = 
+    prior_distribution_cls: Optional[ParamDist]
     posterior_distribution_cls: type[ParamDist]
     is_posterior_trainable: bool
     is_prior_trainable: bool
