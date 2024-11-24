@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from src.methods.bayes.base.optimization import BaseLoss
-from src.methods.bayes.variational.distribution import LogUniformVarDist, ParamDist
+from src.methods.bayes.variational.distribution import ParamDist, LogUniformVarDist, NormalReparametrizedDist
 
 
 class VarDistLoss(BaseLoss):
@@ -95,7 +95,7 @@ class LogUniformVarKLLoss(VarDistLoss):
 class NormVarKLLoss(VarDistLoss):
     def forward(
         self,
-        posterior: dict[str, LogUniformVarDist],
+        posterior: dict[str, NormalReparametrizedDist],
         **kwargs
     ) -> torch.Tensor:
         r"""
