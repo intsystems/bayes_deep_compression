@@ -1,24 +1,36 @@
 [tool.poetry]
-package-mode = false
+package-mode = true
+name = "src"
+version = "0.1.0"
+description = ""
+authors = ["_"]
+license = "MIT"
+readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
 numpy = "^2.1.1"
 pandas = "^2.2.3"
+torch = "^2.5"
 matplotlib = "^3.9.2"
+torchvision = "^0.20.1"
 pyyaml = "^6.0.2"
 mkdocs = "^1.6.1"
 mkdocstrings = {extras = ["python"], version = "^0.26.2"}
 mkdocs-material = "^9.5.43"
-
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.29.5"
-
-[[tool.poetry.source]]
-name = "pytorch_cpu"
-url = "https://download.pytorch.org/whl/cpu"
-priority = "explicit"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 110
+target-version = ["py39"]
+
+[tool.isort]
+src_paths = ["ds_project"]
+profile = "black"
+line_length = 110
+lines_after_imports = 2

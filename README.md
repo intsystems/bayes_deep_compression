@@ -1,23 +1,23 @@
-# Bayesian deep compression
+# BayesComp
 
- The project develops the library that unifies different approaches for model selection and parameter pruning.
+ The project develops a PyTorch extension library for bayessian inference and parameter pruning in deep learning models.
 
-## Algorithms and stack
-
-### 1. HMC
-
-### 2. ELBO-based
-
-Numpy, scipy, torch, matplotlib, ...
-
-### 3. Laplase approxiamtion
-
-Numpy, scipy, torch, matplotlib, ...
-
-### 4. Rényi divergence
-
-Numpy, scipy, torch, matplotlib, ...
-
-## Project scheme
+## Theoretical background
 
 ...
+
+## How to use?
+
+...
+
+## Installation
+
+...
+
+## References
+
+1. Graves, A. (2011). Practical Variational Inference for Neural Networks. In Advances in Neural Information Processing Systems. Curran Associates, Inc.
+
+2. Christos Louizos, Karen Ullrich, & Max Welling. (2017). Bayesian Compression for Deep Learning.
+
+3. Hippolyt Ritter, Aleksandar Botev, & David Barber (2018). A Scalable Laplace Approximation for Neural Networks. In International Conference on Learning Representations.
