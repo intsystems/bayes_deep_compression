@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from src.methods.bayes.base.net import BaseBayesModuleNet, BayesModule
-from src.methods.bayes.variational.distribution import LogUniformVarDist, NormalReparametrizedDist
+from src.methods.bayes.variational.distribution import LogUniformVarDist, NormalDist, NormalReparametrizedDist
 from src.utils.attribute import del_attr, set_attr
 
 
@@ -47,6 +47,6 @@ class NormalVarBayesModule(BaseBayesVarModule):
 
     def __init__(self, module: nn.Module) -> None:
         self.posterior_distribution_cls = NormalReparametrizedDist
-        self.prior_distribution_cls = None
+        self.prior_distribution_cls = NormalDist
         self.is_prior_trainable = False
         super().__init__(module)

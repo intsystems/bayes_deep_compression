@@ -49,6 +49,10 @@ class ParamDist(D.distribution.Distribution, ABC):
 
     @abstractmethod
     def rsample(self, sample_shape: _size = torch.Size()) -> torch.Tensor:
+        """ 
+        Returns parameters sampled using reparametrization trick, so they could be used for 
+        gradient estimation
+        """
         ...
 
     @property
