@@ -97,12 +97,6 @@ class NormalDist(D.Normal, ParamDist):
 
     def __init__(self, loc, scale, validate_args=None):
         super().__init__(loc, scale, validate_args=validate_args)
-        # self.loc, self._scale = D.broadcast_all(loc, scale)
-        # if isinstance(loc, Number) and isinstance(scale, Number):
-        #     batch_shape = torch.Size()
-        # else:
-        #     batch_shape = self.loc.size()
-        # D.Distribution.__init__(self, batch_shape, validate_args=validate_args)
 
     def get_params(self) -> dict[str, nn.Parameter]:
         return {"loc": self.loc, "scale": self.scale}
@@ -118,7 +112,6 @@ class NormalReparametrizedDist(D.Normal, ParamDist):
     @classmethod
     def from_parameter(self, p: nn.Parameter) -> ParamDist:
         loc = nn.Parameter(p, requires_grad=True)
-        # scale4softplus = nn.Parameter(p.new(p.size()).rand_(), requires_grad=True)
         scale4softplus = nn.Parameter(torch.Tensor(p.shape).uniform_(-4, -2), requires_grad=True)
         return NormalReparametrizedDist(loc, scale4softplus)
 
@@ -133,20 +126,13 @@ class NormalReparametrizedDist(D.Normal, ParamDist):
     @property
     def scale(self):
         return F.softplus(self._scale)
-    
+
     @property
     def log_scale(self):
         return torch.log(self.scale)
 
     def get_params(self) -> dict[str, nn.Parameter]:
         return {"loc": self.loc, "scale": self._scale}
-
-    # Legacy
-    # def rsample(self, sample_shape: _size = torch.Size()) -> torch.Tensor:
-    #     shape = self._extended_shape(sample_shape)
-    #     eps = _standard_normal(shape, dtype=self.loc.dtype, device=self.loc.device)
-    #     w = self.loc + eps * self.scale
-    #     return w
 
     def log_z_test(self):
         return torch.log(torch.abs(self.mean)) - torch.log(self.variance)
