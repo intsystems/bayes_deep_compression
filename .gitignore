@@ -469,11 +469,14 @@ TSWLatexianTemp*
 #*Notes.bib
 
 MNIST*
-dist*
-# personal
-papers
-slides
 
-# large data and models
-examples/**/data/
-examples/**/artifacts/
+#Identifier
+*:Zone.Identifier
+#data
+./examples/data
+
+# pytest
+/conftest.py
+
+.vscode/
+tmp/
