@@ -2,8 +2,6 @@
      another high-order envelope BaseBayesModuleNet.
 """
 import pytest
-import random
-random.seed(0)
 
 from copy import deepcopy
 
@@ -21,7 +19,6 @@ def test_simple_bayes_module(
         model_dim: int,
         num_test_samples: int
 ):
-    torch.manual_seed(14312122)
 
     module = module.to("cpu")
     num_module_params = len(list(module.parameters()))
@@ -47,33 +44,32 @@ def test_simple_bayes_module(
         param_samples = bayes_module.sample()
         # compute loss and populate gradients of distribution parameters
         model_output = bayes_module(10 * torch.rand(model_dim))
-        loss = F.mse_loss(model_output, 100000 * torch.ones_like(model_output))
+        loss = F.mse_loss(model_output, torch.zeros_like(model_output))
         loss.backward()
 
         # check gradients of distribution parameters
-        for distr_name, distr in bayes_module.net_distribution.weight_distribution.items():
-            for distr_p_name, distr_param in distr.get_params().items():
+        for distr in bayes_module.net_distribution.weight_distribution.values():
+            for distr_param in distr.get_params().values():
                 assert distr_param.requires_grad is True
-                assert distr_param.grad is not None
+                assert not (distr_param.grad is None)
                 assert not distr_param.grad.allclose(torch.zeros_like(distr_param.grad))
 
         bayes_module.zero_grad()
 
-        # check gradients to be None
+        # check gradients to be zero
         for distr in bayes_module.net_distribution.weight_distribution.values():
             for distr_param in distr.get_params().values():
-                assert distr_param.grad is None
+                assert distr_param.grad.allclose(torch.zeros_like(distr_param.grad))
 
 
 def test_simple_bayes_net(
         model_dim: int,
         num_test_samples: int
 ):
-    torch.manual_seed(42)
-
     # build mixed module
     linears_1 = nn.Sequential(nn.Linear(model_dim, model_dim), nn.Linear(model_dim, model_dim))
     linear_2 = nn.Linear(model_dim, model_dim)
+    batch_norm = nn.BatchNorm1d(model_dim)
     base_module = nn.Sequential(
         linears_1,
         nn.Sigmoid(),
@@ -87,8 +83,9 @@ def test_simple_bayes_net(
     bayes_net = VarBayesModuleNet(
         base_module,
         nn.ModuleList([
-            linears_1,
-            LogUniformVarBayesModule(linear_2)
+            LogUniformVarBayesModule(linears_1),
+            batch_norm,
+            linear_2
         ])
     )
 
@@ -100,13 +97,13 @@ def test_simple_bayes_net(
         if i % 2 == 0:
             bayes_net.train()
         else:
-            bayes_net.train()
+            bayes_net.eval()
 
         # sample module parameters
         param_samples = bayes_net.sample()
         # compute loss and populate gradients of distribution parameters
         model_output = bayes_net(10 * torch.rand(model_dim))
-        loss = F.mse_loss(model_output, 100000 * torch.ones_like(model_output))
+        loss = F.mse_loss(model_output, torch.zeros_like(model_output))
         loss.backward()
 
         # check gradients of distribution parameters
@@ -121,7 +118,7 @@ def test_simple_bayes_net(
             if not isinstance(submodule, BayesModule):
                 for param in submodule.parameters():
                     assert param.requires_grad is True
-                    assert param.grad is not None
+                    assert not (param.grad is None)
                     assert not param.grad.allclose(torch.zeros_like(param.grad))
 
         bayes_net.zero_grad()

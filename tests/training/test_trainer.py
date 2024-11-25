@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from torch.utils.data import Dataset, Subset
+from torch.utils.data import Dataset
 
 from src.methods.bayes.variational.net import LogUniformVarBayesModule
 from src.methods.bayes.variational.optimization import LogUniformVarKLLoss
@@ -18,16 +18,9 @@ from src.methods.report.variational import VarBaseReport
 
 
 def test_simple_trainer(mnist_classifier: nn.Module, mnist_dataset: Dataset):
-    # shrink mnist dataset
-    mnist_dataset = Subset(mnist_dataset, torch.arange(200))
-
-    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-
-    mnist_classifier.to(device)
-
     beta = Beta_Scheduler_Plato()
 
-    EPOCHS = 1
+    EPOCHS = 2
     BATCH_SIZE = 4
     LR = 1e-0  # 5e-4
     # Split the training set into training and validation sets
@@ -64,8 +57,8 @@ def test_simple_trainer(mnist_classifier: nn.Module, mnist_dataset: Dataset):
         beta_KL.step(train_result.dist_loss)
         trainer.params.beta = float(beta)
 
-    val_size    = int(VAL_PERCENT * len(mnist_dataset)) 
-    train_size  = len(mnist_dataset) - val_size
+    val_size = int(VAL_PERCENT * len(mnist_dataset))
+    train_size = len(mnist_dataset) - val_size
 
     t_dataset, v_dataset = torch.utils.data.random_split(mnist_dataset,
                                                          [train_size,
@@ -83,7 +76,6 @@ def test_simple_trainer(mnist_classifier: nn.Module, mnist_dataset: Dataset):
 
     accuracy_collector = CallbackLossAccuracy()
 
-    model.to(device)
     train_params = VarTrainerParams(EPOCHS, optimizer, fit_loss, kl_loss, SAMPLES, PRUNE, BETA, {
                                     'accuracy': accuracy_collector})
 
@@ -104,5 +96,7 @@ def test_simple_trainer(mnist_classifier: nn.Module, mnist_dataset: Dataset):
         )
 
     # check eval_thresholds correctness
-    for eval_res in trainer.eval_thresholds(model, np.linspace(-1, 1, 5).tolist()):
+    for eval_res in trainer.eval_thresholds(trained_model, np.linspace(-1, 1, 5).tolist()):
         assert 0 <= eval_res.cnt_prune_parameters <= eval_res.cnt_params
+        assert np.allclose(eval_res.val_loss,
+                           eval_res.fit_loss + eval_res.dist_loss)
