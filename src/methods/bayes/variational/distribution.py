@@ -59,7 +59,6 @@ class LogUniformVarDist(ParamDist):
             "scale_alphas_log": self.scale_alphas_log,
         }
 
-    @property
     def map(self):
         return self.scale_mus * self.param_mus
 
@@ -89,6 +88,32 @@ class LogUniformVarDist(ParamDist):
         return param_sample
 
 
+class NormalDist(D.Normal, ParamDist):
+    @classmethod
+    def from_parameter(self, p: nn.Parameter) -> ParamDist:
+        loc = nn.Parameter(p.new(p.size()).zero_(), requires_grad=False)
+        scale = nn.Parameter(p.new(p.size()).zero_() + 0.1, requires_grad=False)
+        return NormalDist(loc, scale)
+
+    def __init__(self, loc, scale, validate_args=None):
+        super().__init__(loc, scale, validate_args=validate_args)
+        # self.loc, self._scale = D.broadcast_all(loc, scale)
+        # if isinstance(loc, Number) and isinstance(scale, Number):
+        #     batch_shape = torch.Size()
+        # else:
+        #     batch_shape = self.loc.size()
+        # D.Distribution.__init__(self, batch_shape, validate_args=validate_args)
+
+    def get_params(self) -> dict[str, nn.Parameter]:
+        return {"loc": self.loc, "scale": self.scale}
+
+    def map(self):
+        raise NotImplementedError()
+
+    def log_z_test(self):
+        return -self.scale_alphas_log
+
+
 class NormalReparametrizedDist(D.Normal, ParamDist):
     @classmethod
     def from_parameter(self, p: nn.Parameter) -> ParamDist:
@@ -99,9 +124,6 @@ class NormalReparametrizedDist(D.Normal, ParamDist):
 
     def __init__(self, loc, scale, validate_args=None):
         self.loc, self._scale = broadcast_all(loc, scale)
-        self.loc = nn.Parameter(self.loc)
-        self._scale = nn.Parameter(self._scale)
-
         if isinstance(loc, Number) and isinstance(scale, Number):
             batch_shape = torch.Size()
         else:
@@ -129,6 +151,5 @@ class NormalReparametrizedDist(D.Normal, ParamDist):
     def log_z_test(self):
         return torch.log(torch.abs(self.mean)) - torch.log(self.variance)
 
-    @property
     def map(self):
         return self.loc

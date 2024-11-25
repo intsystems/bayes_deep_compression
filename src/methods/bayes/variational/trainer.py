@@ -234,7 +234,6 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
             if self.params.callback_losses is not None:
                 for custom_loss in self.params.callback_losses.values():
                     custom_loss.step(outputs, labels)
-        
         aggregation_output = self.params.dist_loss.aggregate(fit_losses, dist_losses, float(self.params.beta))
         total_loss, fit_loss_total, dist_loss_total = (
             aggregation_output.total_loss,
