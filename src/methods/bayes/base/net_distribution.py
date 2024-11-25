@@ -17,6 +17,12 @@ class BaseNetDistribution:
     def __init__(
         self, base_module: nn.Module, weight_distribution: dict[str, ParamDist]
     ) -> None:
+        """_summary_
+
+        Args:
+            base_module (nn.Module): custom module layer which is going to be converted to BayesModule
+            weight_distribution (dict[str, ParamDist]): posteror distribution for each parameter of moudule
+        """
         super().__init__()
         self.base_module: nn.Module = base_module
         """Show default architecture of module for which should evalute parameters"""
@@ -106,6 +112,11 @@ class BaseNetDistributionPruner:
     """
 
     def __init__(self, net_distribution: BaseNetDistribution) -> None:
+        """_summary_
+
+        Args:
+            net_distribution (dict[str, ParamDist]): posteror distribution for net which deside how probable zero value is
+        """
         self.net_distribution = net_distribution
         self.dropout_mask_dict: dict[str, nn.Parameter] = {}
         for name_dist, dist in self.net_distribution.weight_distribution.items():
@@ -171,6 +182,11 @@ class BaseNetEnsemble:
     """
 
     def __init__(self, net_distribution: BaseNetDistribution) -> None:
+        """_summary_
+
+        Args:
+            net_distribution (dict[str, ParamDist]): posteror net distribution from which modules should be sampled
+        """
         self.net_distribution = net_distribution
 
     def predict(self): ...

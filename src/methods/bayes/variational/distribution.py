@@ -44,7 +44,15 @@ class LogUniformVarDist(ParamDist):
         scale_alphas_log: torch.Tensor,
         validate_args=None,
     ):
+        r"""_summary_
 
+        Args:
+            param_mus: $\mu$ parameter of distribution
+            param_std_log: $\log(\sigma))$ parameter of distribution
+            scale_mus: $\mu$ parameter scale of distribution
+            scale_alphas_log: $\alpha$ parameter scale of distribution
+            validate_args: alias fo validate_args of torch.distributions.sistribution
+        """
         self.param_mus: nn.Parameter = nn.Parameter(param_mus)
         r"""$\mu$ parameter of distribution"""
         self.param_std_log: nn.Parameter = nn.Parameter(param_std_log)
@@ -167,6 +175,12 @@ class NormalDist(D.Normal, ParamDist):
         return NormalDist(loc, scale)
 
     def __init__(self, loc, scale, validate_args=None):
+        r"""_summary_
+
+        Args:
+            loc: $\mu$ parameter of normal distribution
+            scale: $\sigma$ parameter of distribution
+        """
         super().__init__(loc, scale, validate_args=validate_args)
         # self.loc, self._scale = D.broadcast_all(loc, scale)
         # if isinstance(loc, Number) and isinstance(scale, Number):
@@ -221,9 +235,15 @@ class NormalReparametrizedDist(D.Normal, ParamDist):
         )
         return NormalReparametrizedDist(loc, scale4softplus)
 
-    def __init__(self, loc, scale, validate_args=None):
-        self.loc, self._scale = broadcast_all(loc, scale)
-        if isinstance(loc, Number) and isinstance(scale, Number):
+    def __init__(self, loc, log_scale, validate_args=None):
+        r"""_summary_
+
+        Args:
+            loc: $\mu$ parameter of normal distribution
+            _scale: $\log(\sigma)$ parameter of distribution
+        """
+        self.loc, self._scale = broadcast_all(loc, log_scale)
+        if isinstance(loc, Number) and isinstance(log_scale, Number):
             batch_shape = torch.Size()
         else:
             batch_shape = self.loc.size()

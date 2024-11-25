@@ -20,6 +20,13 @@ class Beta_Scheduler:
     """
 
     def __init__(self, beta: float, ref=None, *args, **kwargs) -> None:
+        """_summary_
+
+        Args:
+            beta: initial beta value
+            ref: reference to trainer parameters which contains beta attribute 
+                or another Beta_Shelduer
+        """
         self.ref = self
         self.beta = beta
         if ref is not None:
@@ -63,11 +70,30 @@ class Beta_Scheduler_Plato(Beta_Scheduler):
         min_beta: float = 1e-9,
         ref=None,
     ):
+        """_summary_
+
+        Args:
+            beta (float): initial beta value
+            alpha (float): factor of beta value by which it multiplied
+            patience (int): Number of steps of loss non-improvement which schelduer should tolerate 
+                before changing beta value
+            is_min (bool): Is it minimiztion problem. So method would consider that loss
+                stops improving when it starts maximizing
+            threshold (float): Algorithm consider loss stops imporving if the next loss is 
+                more(for minimiztion) then min loss more then threshold
+            eps (float): Mininum change of beta. If delta is less there will be no change
+            max_beta (float): Beta would be maxcliped to this value. To work properly
+                ref should reference to trainer parameter
+            min_beta (float): Beta would be mincliped to this value. To work properly
+                ref should reference to trainer parameter
+            ref: reference to trainer parameters which contains beta attribute 
+                or another Beta_Shelduer
+        """
         super().__init__(beta, ref)
         self.cnt_upward = 0
         self.prev_opt = None
         self.patience = patience
-        """Numner of steps of loss non-improvement which schelduer should tolerate 
+        """Number of steps of loss non-improvement which schelduer should tolerate 
         before changing beta value"""
         self.alpha = alpha
         """Factor by which beta value changing"""
@@ -82,9 +108,9 @@ class Beta_Scheduler_Plato(Beta_Scheduler):
         ref should reference to trainer parameter"""
         self.threshold = threshold
         """Algorithm consider loss stops imporving if the next loss is 
-        more(for minimiztion) then min loss more then threshold
-        """
+        more(for minimiztion) then min loss more then threshold"""
         self.eps = eps
+        """Mininum change of beta. If delta is less there will be no change"""
 
     def step(self, loss):
         if (self.prev_opt is not None) and (

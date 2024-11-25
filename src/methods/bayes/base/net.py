@@ -31,7 +31,7 @@ class BayesLayer(nn.Module, ABC):
         """_summary_
 
         Args:
-            base_module (nn.Module): custom Module layer which is going to be converted to BayesModule
+            base_module (nn.Module): custom Module layer which is going to be converted to BayesLayer
         """
         super().__init__()
         posterior: dict[str, ParamDist] = {}

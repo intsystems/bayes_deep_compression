@@ -27,6 +27,11 @@ class BaseBayesVarLayer(BayesLayer):
             set_attr(self.base_module, name.split("."), torch.zeros_like(p))
 
     def __init__(self, module: nn.Module) -> None:
+        """_summary_
+
+        Args:
+            base_module (nn.Module): custom Module layer which is going to be converted to BaseBayesVarLayer
+        """
         super().__init__(module=module)
         self.flush_weights()
 
@@ -47,6 +52,11 @@ class LogUniformVarLayer(BaseBayesVarLayer):
     """
 
     def __init__(self, module: nn.Module) -> None:
+        """_summary_
+
+        Args:
+            base_module (nn.Module): custom Module layer which is going to be converted to LogUniformVarLayer
+        """
         self.posterior_distribution_cls = LogUniformVarDist
         self.prior_distribution_cls = None
         self.is_prior_trainable = False
@@ -60,6 +70,11 @@ class NormalVarBayesLayer(BaseBayesVarLayer):
     """
 
     def __init__(self, module: nn.Module) -> None:
+        """_summary_
+
+        Args:
+            base_module (nn.Module): custom Module layer which is going to be converted to NormalVarBayesLayer
+        """
         self.posterior_distribution_cls = NormalReparametrizedDist
         self.prior_distribution_cls = NormalDist
         self.is_prior_trainable = False

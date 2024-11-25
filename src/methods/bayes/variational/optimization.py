@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from src.methods.bayes.base.optimization import BaseLoss
-from src.methods.bayes.variational.distribution import LogUniformVarDist, ParamDist
+from src.methods.bayes.variational.distribution import LogUniformVarDist, NormalReparametrizedDist, ParamDist
 
 
 class VarDistLoss(BaseLoss):
@@ -29,6 +29,7 @@ class VarDistLoss(BaseLoss):
         dist_loss: torch.Tensor
 
     def __init__(self):
+        """_summary_"""
         super().__init__()
 
     @abstractmethod
@@ -77,7 +78,10 @@ class VarDistLoss(BaseLoss):
 
 
 class LogUniformVarKLLoss(VarDistLoss):
+    """KL loss between factorized variational distribution and LogUniform prior. 
+    Works only with modules with LogUniformVarDist posterior"""
     def __init__(self):
+        """_summary_"""
         super().__init__()
 
     def forward(
@@ -137,8 +141,13 @@ class LogUniformVarKLLoss(VarDistLoss):
 
 
 class NormVarKLLoss(VarDistLoss):
+    """KL loss between factorized normals. 
+    Works only with modules with NormalReparametrizedDist posterior"""
+    def __init__(self):
+        """_summary_"""
+        super().__init__()
     def forward(
-        self, posterior: dict[str, LogUniformVarDist], **kwargs
+        self, posterior: dict[str, NormalReparametrizedDist], **kwargs
     ) -> torch.Tensor:
         r"""
         Computes KL loss between factorized normals
@@ -207,6 +216,12 @@ class VarRenuiLoss(VarDistLoss):
     """
 
     def __init__(self, alpha: float = -1, aggregation: str = "weighting"):
+        """_summary_
+
+        Args:
+            alpha (float): alpha
+            aggregation (str): aggregation
+        """
         assert aggregation in ["weighting", "sample"]
         self.alpha = alpha
         self.aggregation = aggregation
