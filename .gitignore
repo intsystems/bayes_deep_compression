@@ -477,3 +477,5 @@ MNIST*
 
 # pytest
 /conftest.py
+
+.vscode/
