@@ -20,16 +20,38 @@ extra_javascript:
 
 plugins:
 - blog
+- search
 - mkdocstrings:
     default_handler: python
+    handlers:
+      python:
+        paths: [src]
+        options:
+          docstring_style: google
 
 nav:
   - Home: index.md
   - User Guide: variational/how_to_use.md
   - Examples: variational/examples.md
-  - Reference: 
-    - Bayessian NN: variational/reference/bayes_nn.md
-    - Bayessian Loss: variational/reference/bayes_nn.md
+  - Reference:
+    - 'Parameter Distributions':
+      - 'Base Paraameter Distributions': reference/methods/bayes/base/distribution.md
+      - 'Variance Paraameter Distributions': reference/methods/bayes/variational/distribution.md
+    - 'Bayessian NN':
+      - 'Base Bayessian NN': reference/methods/bayes/base/net.md
+      - 'Variance Bayessian NN': reference/methods/bayes/variational/net.md
+    - 'Network Distributions':
+      - 'Base Network Distributions': reference/methods/bayes/base/net_distribution.md
+      - 'Variance Network Distributions': reference/methods/bayes/variational/net_distribution.md
+    - Methods:
+      - Trainer:
+        - 'Base Trainer': reference/methods/trainer/base.md
+        - 'Variational Trainer': reference/methods/trainer/variational.md
+      - 'Pruner':
+        - 'Base Pruner': reference/methods/pruner/base.md
+    - Bayessian Loss: 
+      - Base Bayessian Loss: variational/reference/bayes_nn.md
+      - Variance Bayessian Loss: reference/methods/bayes/base/net.md
   - Blog: 
     - blog/index.md
 

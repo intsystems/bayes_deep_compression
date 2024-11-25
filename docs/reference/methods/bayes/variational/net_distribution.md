@@ -1,0 +1,1 @@
+::: methods.bayes.variational.net_distribution

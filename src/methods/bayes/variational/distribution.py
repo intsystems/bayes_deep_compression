@@ -48,7 +48,7 @@ class LogUniformVarDist(ParamDist):
 
         Args:
             param_mus: $\mu$ parameter of distribution
-            param_std_log: $\log(\sigma))$ parameter of distribution
+            param_std_log: $\log(\sigma)$ parameter of distribution
             scale_mus: $\mu$ parameter scale of distribution
             scale_alphas_log: $\alpha$ parameter scale of distribution
             validate_args: alias fo validate_args of torch.distributions.sistribution
