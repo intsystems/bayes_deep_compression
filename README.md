@@ -1,3 +1,5 @@
+![Tests](https://github.com/github/docs/actions/workflows/main.yml/badge.svg)
+
 # BayesComp
 
  The project develops a PyTorch extension library for bayessian inference and parameter pruning in deep learning models.

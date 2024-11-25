@@ -48,10 +48,10 @@ def mnist_dataset() -> Dataset:
     data_dir.mkdir(parents=True, exist_ok=True)
 
     train_dataset = torchvision.datasets.MNIST(
-        root=data_dir, train=True, download=False, transform=transforms.ToTensor()
+        root=data_dir, train=True, download=True, transform=transforms.ToTensor()
     )
     yield train_dataset
 
     # clean dataset dir
-    # shutil.rmtree(data_dir)
-    # data_dir.parent.rmdir()
+    shutil.rmtree(data_dir)
+    data_dir.parent.rmdir()
