@@ -31,12 +31,12 @@ plugins:
 
 nav:
   - Home: index.md
-  - User Guide: variational/how_to_use.md
+  - User Guide: user_guide/guide.md
   - Examples: variational/examples.md
   - Reference:
     - 'Parameter Distributions':
-      - 'Base Paraameter Distributions': reference/methods/bayes/base/distribution.md
-      - 'Variance Paraameter Distributions': reference/methods/bayes/variational/distribution.md
+      - 'Base Parameter Distributions': reference/methods/bayes/base/distribution.md
+      - 'Variance Parameter Distributions': reference/methods/bayes/variational/distribution.md
     - 'Bayessian NN':
       - 'Base Bayessian NN': reference/methods/bayes/base/net.md
       - 'Variance Bayessian NN': reference/methods/bayes/variational/net.md
