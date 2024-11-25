@@ -31,7 +31,7 @@ class BayesLayer(nn.Module, ABC):
         """_summary_
 
         Args:
-            base_module (nn.Module): custom Module layer which is going to be converted to BayesLayer
+            module (nn.Module): custom Module layer which is going to be converted to BayesLayer
         """
         super().__init__()
         posterior: dict[str, ParamDist] = {}
@@ -159,7 +159,7 @@ class BaseBayesNet(nn.Module):
 
         Args:
             base_module (nn.Module): custom Module which is going to have some BayesModule as submodules
-            module_list (nn.ModuleList): all submodules of the base_module supposed to be trained. This
+            module_dict (nn.ModuleDict): all submodules of the base_module supposed to be trained. This
                 may be nn.Module or BayesModule. Such division is required because base_module is not
                 registred as Module in this class.
         """

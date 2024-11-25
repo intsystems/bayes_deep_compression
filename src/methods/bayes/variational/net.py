@@ -30,7 +30,7 @@ class BaseBayesVarLayer(BayesLayer):
         """_summary_
 
         Args:
-            base_module (nn.Module): custom Module layer which is going to be converted to BaseBayesVarLayer
+            module (nn.Module): custom Module layer which is going to be converted to BaseBayesVarLayer
         """
         super().__init__(module=module)
         self.flush_weights()
@@ -55,7 +55,7 @@ class LogUniformVarLayer(BaseBayesVarLayer):
         """_summary_
 
         Args:
-            base_module (nn.Module): custom Module layer which is going to be converted to LogUniformVarLayer
+            module (nn.Module): custom Module layer which is going to be converted to LogUniformVarLayer
         """
         self.posterior_distribution_cls = LogUniformVarDist
         self.prior_distribution_cls = None
@@ -73,7 +73,7 @@ class NormalVarBayesLayer(BaseBayesVarLayer):
         """_summary_
 
         Args:
-            base_module (nn.Module): custom Module layer which is going to be converted to NormalVarBayesLayer
+            module (nn.Module): custom Module layer which is going to be converted to NormalVarBayesLayer
         """
         self.posterior_distribution_cls = NormalReparametrizedDist
         self.prior_distribution_cls = NormalDist

@@ -29,12 +29,12 @@ class ParamDist(D.distribution.Distribution, ABC):
         ...
 
     @abstractmethod
-    def log_prob(self, weights):
+    def log_prob(self, weights: torch.Tensor) -> torch.Tensor:
         """
         Returns logarithm of probability density function of distibution evaluated at weights.
 
         Args:
-            weights: the point at which probability should be evaluated.
+            weights (torch.Tensor): the point at which probability should be evaluated.
         """
         ...
 
@@ -60,19 +60,25 @@ class ParamDist(D.distribution.Distribution, ABC):
 
     @property
     @abstractmethod
-    def map(self):
+    def map(self) -> torch.Tensor:
         """
         Returns mode of the distibution. It has a sense of maximum aposteriori estimation
         for bayessian nets.
+
+        Returns:
+            torch.Tensor: MAP parameters
         """
         ...
 
     @property
     @abstractmethod
-    def mean(self):
+    def mean(self) -> torch.Tensor:
         """
         Returns mean of the distibution. It has a sense of non-bias estimation
         for bayessian nets.
+
+        Returns:
+            torch.Tensor: mean parameters
         """
         ...
 

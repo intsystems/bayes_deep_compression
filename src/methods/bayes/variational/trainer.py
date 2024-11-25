@@ -19,12 +19,12 @@ class Beta_Scheduler:
     increase it through learning.
     """
 
-    def __init__(self, beta: float, ref=None, *args, **kwargs) -> None:
+    def __init__(self, beta: float, ref: 'Beta_Scheduler'| 'VarTrainerParams' =None, *args, **kwargs) -> None:
         """_summary_
 
         Args:
-            beta: initial beta value
-            ref: reference to trainer parameters which contains beta attribute 
+            beta (float): initial beta value
+            ref (Beta_Scheduler| VarTrainerParams): reference to trainer parameters which contains beta attribute 
                 or another Beta_Shelduer
         """
         self.ref = self
@@ -86,7 +86,7 @@ class Beta_Scheduler_Plato(Beta_Scheduler):
                 ref should reference to trainer parameter
             min_beta (float): Beta would be mincliped to this value. To work properly
                 ref should reference to trainer parameter
-            ref: reference to trainer parameters which contains beta attribute 
+            ref (Beta_Scheduler| VarTrainerParams): reference to trainer parameters which contains beta attribute 
                 or another Beta_Shelduer
         """
         super().__init__(beta, ref)
@@ -245,6 +245,17 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesNet]):
             None, list[Callable[[BaseBayesTrainer, TrainResult], None]]
         ] = None,
     ):
+        """_summary_
+
+        Args:
+            params (TrainerParams): trianing params that is used to fine-tune training
+            report_chain (Optional[ReportChain]): All callback that should be return by each epoch
+            train_dataset (Iterable): Dataset on which model should be trained
+            eval_dataset (Iterable): Dataset on which epoch of training model should be evaluated
+            post_train_step_func (Union[None, list[Callable[[BaseBayesTrainer, TrainResult], None]]):
+                functions that should be executed after each train step
+        ] 
+        """
         super().__init__(params, report_chain, train_dataset, eval_dataset)
 
         # B8006

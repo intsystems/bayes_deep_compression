@@ -1,4 +1,5 @@
 from numbers import Number
+from typing import Optional
 
 import torch
 import torch.distributions as D
@@ -42,7 +43,7 @@ class LogUniformVarDist(ParamDist):
         param_std_log: torch.Tensor,
         scale_mus: torch.Tensor,
         scale_alphas_log: torch.Tensor,
-        validate_args=None,
+        validate_args: Optional[bool] =None,
     ):
         r"""_summary_
 
@@ -67,7 +68,9 @@ class LogUniformVarDist(ParamDist):
             self.param_std_log,
             self.scale_mus,
             self.scale_alphas_log,
-        ) = broadcast_all(self.param_mus, self.param_std_log, self.scale_mus, self.scale_alphas_log)
+        ) = broadcast_all(
+            self.param_mus, self.param_std_log, self.scale_mus, self.scale_alphas_log
+        )
 
         batch_shape = self.param_mus.size()
         super().__init__(batch_shape, validate_args=validate_args)
@@ -87,52 +90,52 @@ class LogUniformVarDist(ParamDist):
             "scale_alphas_log": self.scale_alphas_log,
         }
 
-    def map(self) -> torch.tensor:
+    def map(self) -> torch.Tensor:
         """
         Return MAP(if we speaks about posterior distribution) or MLE estimation of parameters
 
         Returns:
-            torch.tensor: MAP estimation of parameters
+            torch.Tensor: MAP estimation of parameters
         """
         return self.scale_mus * self.param_mus
 
     @property
-    def mean(self) -> torch.tensor:
+    def mean(self) -> torch.Tensor:
         """
         Return mean estimation of parameters
 
         Returns:
-            torch.tensor: mean value of parameters
+            torch.Tensor: mean value of parameters
         """
         return self.scale_mus * self.param_mus
 
     @property
-    def variance(self) -> torch.tensor:
+    def variance(self) -> torch.Tensor:
         """
         Return variance of parameters
 
         Returns:
-            torch.tensor: variance of parameters
+            torch.Tensor: variance of parameters
         """
         return torch.FloatTensor([1])
 
-    def log_prob(self, weights) -> torch.tensor:
+    def log_prob(self, weights) -> torch.Tensor:
         """
         Return logarithm probability at weights
 
         Returns:
-            torch.tensor: logarithm probability at weights
+            torch.Tensor: logarithm probability at weights
         """
         return torch.FloatTensor([-1])
 
-    def log_z_test(self) -> torch.tensor:
+    def log_z_test(self) -> torch.Tensor:
         """
         Return logarithm of z-test statistic. For numerical stability it is
         -self.scale_alphas_log. This value is compared with threshold to
         consider should be parameter pruned or not.
 
         Returns:
-            torch.tensor: logarithm of z-test statistic
+            torch.Tensor: logarithm of z-test statistic
         """
         return -self.scale_alphas_log
 
@@ -173,15 +176,20 @@ class NormalDist(D.Normal, ParamDist):
         loc = nn.Parameter(p.new(p.size()).zero_(), requires_grad=False)
         scale = nn.Parameter(p.new(p.size()).zero_() + 0.1, requires_grad=False)
         return NormalDist(loc, scale)
-
-    def __init__(self, loc, scale, validate_args=None):
+        
+    def __init__(self, loc: torch.Tensor, scale: torch.Tensor, validate_args=None):
         r"""_summary_
 
         Args:
-            loc: $\mu$ parameter of normal distribution
-            scale: $\sigma$ parameter of distribution
+            loc (torch.Tensor): $\mu$ parameter of normal distribution
+            scale (torch.Tensor): $\sigma$ parameter of distribution
         """
         super().__init__(loc, scale, validate_args=validate_args)
+
+        self.loc = self.loc
+        """$\mu$ parameter of normal distribution"""
+        self._scale = self.scale
+        """scale: $\sigma$ parameter of distribution"""
         # self.loc, self._scale = D.broadcast_all(loc, scale)
         # if isinstance(loc, Number) and isinstance(scale, Number):
         #     batch_shape = torch.Size()
@@ -199,22 +207,22 @@ class NormalDist(D.Normal, ParamDist):
         """
         return {"loc": self.loc, "scale": self.scale}
 
-    def map(self):
+    def map(self) -> torch.Tensor:
         """
         Return MAP(if we speaks about posterior distribution) or MLE estimation of parameters
 
         Returns:
-            torch.tensor: MAP estimation of parameters
+            torch.Tensor: MAP estimation of parameters
         """
         raise NotImplementedError()
 
-    def log_z_test(self):
+    def log_z_test(self) -> torch.Tensor:
         """
         Return logarithm of z-test statistic. This value is compared with threshold to
         consider should be parameter pruned or not.
 
         Returns:
-            torch.tensor: logarithm of z-test statistic
+            torch.Tensor: logarithm of z-test statistic
         """
         return -self.scale_alphas_log
 
@@ -235,14 +243,21 @@ class NormalReparametrizedDist(D.Normal, ParamDist):
         )
         return NormalReparametrizedDist(loc, scale4softplus)
 
-    def __init__(self, loc, log_scale, validate_args=None):
+    def __init__(self, loc, log_scale, validate_args=None) -> None:
         r"""_summary_
 
         Args:
-            loc: $\mu$ parameter of normal distribution
-            _scale: $\log(\sigma)$ parameter of distribution
+            loc (torch.Tensor): $\mu$ parameter of normal distribution
+            log_scale (torch.Tensor): $\log(\sigma)$ parameter of distribution
         """
-        self.loc, self._scale = broadcast_all(loc, log_scale)
+
+        loc, log_scale = broadcast_all(loc, log_scale)
+
+        self.loc = loc
+        """$\mu$ parameter of normal distribution"""
+        self._scale = log_scale
+        """$\log(\sigma)$ parameter of distribution"""
+
         if isinstance(loc, Number) and isinstance(log_scale, Number):
             batch_shape = torch.Size()
         else:
@@ -250,22 +265,22 @@ class NormalReparametrizedDist(D.Normal, ParamDist):
         D.Distribution.__init__(self, batch_shape, validate_args=validate_args)
 
     @property
-    def scale(self) -> torch.tensor:
+    def scale(self) -> torch.Tensor:
         """
         Return scale parameter of normal distribution
 
-        Args:
-            torch.tensor: scale parameter of normal distribution
+        Returns:
+            torch.Tensor: scale parameter of normal distribution
         """
         return F.softplus(self._scale)
 
     @property
-    def log_scale(self):
+    def log_scale(self) -> torch.Tensor:
         """
         Return log-scale parameter of normal distribution
 
-        Args:
-            torch.tensor: log-scale parameter of normal distribution
+        Returns:
+            torch.Tensor: log-scale parameter of normal distribution
         """
         return torch.log(self.scale)
 
@@ -286,21 +301,21 @@ class NormalReparametrizedDist(D.Normal, ParamDist):
     #     w = self.loc + eps * self.scale
     #     return w
 
-    def log_z_test(self):
+    def log_z_test(self) -> torch.Tensor:
         """
         Return logarithm of z-test statistic. This value is compared with threshold to
         consider should be parameter pruned or not.
 
         Returns:
-            torch.tensor: logarithm of z-test statistic
+            torch.Tensor: logarithm of z-test statistic
         """
         return torch.log(torch.abs(self.mean)) - torch.log(self.variance)
 
-    def map(self):
+    def map(self) -> torch.Tensor:
         """
         Return MAP(if we speaks about posterior distribution) or MLE estimation of parameters
 
         Returns:
-            torch.tensor: MAP estimation of parameters
+            torch.Tensor: MAP estimation of parameters
         """
         return self.loc
