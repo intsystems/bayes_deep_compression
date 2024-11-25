@@ -808,3 +808,6 @@ MNIST*
 
 # pytest
 /conftest.py
+
+.vscode/
+tmp/

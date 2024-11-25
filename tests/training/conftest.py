@@ -54,4 +54,4 @@ def mnist_dataset() -> Dataset:
 
     # clean dataset dir
     shutil.rmtree(data_dir)
-    data_dir.rmdir()
+    data_dir.parent.rmdir()

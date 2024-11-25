@@ -5,6 +5,8 @@ import pytest
 import torch
 import torch.nn as nn
 
+import warnings
+
 from src.methods.bayes.variational.distribution import LogUniformVarDist, NormalReparametrizedDist
 
 
@@ -30,7 +32,7 @@ def test_param_dist(dist_setup):
         *[torch.rand(SHAPE) for _ in range(num_dist_params)]
     )
     # create distibtion out of given tensor
-    dist = LogUniformVarDist.from_parameter(torch.rand(SHAPE))
+    # dist = LogUniformVarDist.from_parameter(torch.rand(SHAPE))
 
     # access parameters
     for param in dist.get_params().values():
@@ -43,21 +45,17 @@ def test_param_dist(dist_setup):
             prop = getattr(dist, prop_name)
             assert isinstance(prop, torch.Tensor)
         except NotImplementedError:
-            print(f"{prop_name} is not implemented in {dist.__class__.__name__}!")
+            warnings.warn(f"{prop_name} is not implemented in {dist.__class__.__name__}!")
 
     # test getting log(p)
     for _ in range(NUM_SAMPLES):
-        assert dist.log_prob(20 * torch.rand(SHAPE) - 10) <= 0.
+        assert torch.all(dist.log_prob(20 * torch.rand(SHAPE) - 10) <= 0)
 
     # z-test
     dist.log_z_test()
 
     # test r-sampling
     for _ in range(NUM_SAMPLES):
-        sample = dist.rsample(SAMPLE_SHAPE)
-        assert sample.requires_grad == True
-        assert sample.shape == [*SAMPLE_SHAPE].extend([*SHAPE])
-
-
-
-
+        sample: torch.Tensor = dist.rsample(SAMPLE_SHAPE)
+        assert sample.requires_grad is True
+        assert list(sample.shape) == list(SAMPLE_SHAPE) + list(SHAPE)

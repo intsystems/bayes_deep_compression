@@ -1,6 +1,7 @@
 import copy
 from typing import Optional
 
+import torch
 import torch.nn as nn
 from src.methods.bayes.base.distribution import ParamDist
 from src.methods.bayes.base.net_distribution import BaseNetDistribution
@@ -113,6 +114,14 @@ class BaseBayesModuleNet(nn.Module):
 
     def sample_model(self) -> nn.Module:
         self.sample()
+
+        # turn params from torch.Tensor to nn.Parameters
+        for module in self.module_list:
+            if isinstance(module, BayesModule):
+                for param_name in module.net_distribution.weight_distribution:
+                    cur_param: torch.Tensor = getattr(module.base_module, param_name)
+                    setattr(module.base_module, param_name, nn.Parameter(cur_param))
+
         model = copy.deepcopy(self.base_module)
         self.flush_weights()
         return model
