@@ -8,7 +8,7 @@ from src.methods.bayes.variational.net import VarBayesModuleNet
 from src.methods.bayes.variational.net_distribution import VarBayesModuleNetDistribution
 from src.methods.bayes.variational.optimization import VarDistLoss
 from src.methods.report.base import ReportChain
-from tqdm import tqdm
+from tqdm.notebook import tqdm
 
 
 class Beta_Scheduler:

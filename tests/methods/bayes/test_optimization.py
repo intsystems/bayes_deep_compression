@@ -17,8 +17,8 @@ def loss_cls(request) -> type[VarDistLoss]:
     return request.param
 
 
-def test_simple_loss(loss_cls: type[VarDistLoss],
-                     bayes_module_cls: type[BayesModule],
+def test_simple_loss(loss_cls: type[VarDistLoss], 
+                     bayes_module_cls: type[BayesModule], 
                      module: nn.Module,
                      model_dim: int,
                      num_test_samples: int
@@ -45,8 +45,8 @@ def test_simple_loss(loss_cls: type[VarDistLoss],
 
         # compute fit loss
         fit_loss = F.mse_loss(
-            bayes_module(10 * torch.rand((model_dim, ))),
-            1000 * torch.ones((model_dim, ))
+            bayes_module(torch.rand((model_dim, ))),
+            torch.zeros((model_dim, ))
         )
 
         # aggregate losses
@@ -66,7 +66,7 @@ def test_simple_loss(loss_cls: type[VarDistLoss],
         for distr in bayes_module.net_distribution.weight_distribution.values():
             for distr_param in distr.get_params().values():
                 assert distr_param.requires_grad is True
-                assert distr_param.grad is not None
+                assert not (distr_param.grad is None)
                 assert not distr_param.grad.allclose(torch.zeros_like(distr_param.grad))
 
         bayes_module.zero_grad()

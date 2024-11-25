@@ -1,5 +1,3 @@
-![Tests](https://github.com/intsystems/bayes_deep_compression/actions/workflows/python-app.yml/badge.svg?branch=test_variational)
-
 # BayesComp
 
  The project develops a PyTorch extension library for bayessian inference and parameter pruning in deep learning models.

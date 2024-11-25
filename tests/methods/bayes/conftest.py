@@ -10,6 +10,15 @@ import torch.nn.functional as F
 from src.methods.bayes.variational.optimization import *
 from src.methods.bayes.variational.net import *
 
+# add optinions to control experiments
+def pytest_addoption(parser):
+    parser.addoption(
+        "--num_test_samples", action="store", default="10", type=int
+    )
+    parser.addoption(
+        "--model_dim", action="store", default="5", type=int
+    )
+
 
 @pytest.fixture
 def num_test_samples(request) -> int:
