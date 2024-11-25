@@ -479,3 +479,4 @@ MNIST*
 /conftest.py
 
 .vscode/
+tmp/

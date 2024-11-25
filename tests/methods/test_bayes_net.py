@@ -2,6 +2,8 @@
      another high-order envelope BaseBayesModuleNet.
 """
 import pytest
+import random
+random.seed(0)
 
 from copy import deepcopy
 
@@ -19,6 +21,7 @@ def test_simple_bayes_module(
         model_dim: int,
         num_test_samples: int
 ):
+    torch.manual_seed(14312122)
 
     module = module.to("cpu")
     num_module_params = len(list(module.parameters()))
@@ -44,7 +47,7 @@ def test_simple_bayes_module(
         param_samples = bayes_module.sample()
         # compute loss and populate gradients of distribution parameters
         model_output = bayes_module(10 * torch.rand(model_dim))
-        loss = F.mse_loss(model_output, 1000 * torch.ones_like(model_output))
+        loss = F.mse_loss(model_output, 100000 * torch.ones_like(model_output))
         loss.backward()
 
         # check gradients of distribution parameters
@@ -66,6 +69,8 @@ def test_simple_bayes_net(
         model_dim: int,
         num_test_samples: int
 ):
+    torch.manual_seed(42)
+
     # build mixed module
     linears_1 = nn.Sequential(nn.Linear(model_dim, model_dim), nn.Linear(model_dim, model_dim))
     linear_2 = nn.Linear(model_dim, model_dim)
@@ -101,7 +106,7 @@ def test_simple_bayes_net(
         param_samples = bayes_net.sample()
         # compute loss and populate gradients of distribution parameters
         model_output = bayes_net(10 * torch.rand(model_dim))
-        loss = F.mse_loss(model_output, 1000 * torch.ones_like(model_output))
+        loss = F.mse_loss(model_output, 100000 * torch.ones_like(model_output))
         loss.backward()
 
         # check gradients of distribution parameters
