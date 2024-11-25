@@ -1,4 +1,4 @@
-![Tests](https://github.com/github/docs/actions/workflows/main.yml/badge.svg)
+![Tests](https://github.com/intsystems/bayes_deep_compression/actions/workflows/python-app.yml/badge.svg?branch=test_variational)
 
 # BayesComp
 
