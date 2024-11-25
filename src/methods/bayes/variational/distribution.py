@@ -40,14 +40,14 @@ class LogUniformVarDist(ParamDist):
     ):
         self.param_mus: nn.Parameter = nn.Parameter(param_mus)
         self.param_std_log: nn.Parameter = nn.Parameter(param_std_log)
-        self.scale_mu: nn.Parameter = nn.Parameter(scale_mus)
+        self.scale_mus: nn.Parameter = nn.Parameter(scale_mus)
         self.scale_alphas_log: nn.Parameter = nn.Parameter(scale_alphas_log)
-        (
-            self.param_mus,
-            self.param_std,
-            self.scale_mus,
-            self.scale_alphas_log,
-        ) = broadcast_all(param_mus, param_std_log, scale_mus, scale_alphas_log)
+        # (
+        #     self.param_mus,
+        #     self.param_std,
+        #     self.scale_mus,
+        #     self.scale_alphas_log,
+        # ) = broadcast_all(param_mus, param_std_log, scale_mus, scale_alphas_log)
         batch_shape = self.param_mus.size()
         super().__init__(batch_shape, validate_args=validate_args)
 
@@ -69,10 +69,10 @@ class LogUniformVarDist(ParamDist):
 
     @property
     def variance(self):
-        raise NotImplementedError()
+        return torch.FloatTensor([1])
 
     def log_prob(self, weights):
-        raise NotImplementedError()
+        return torch.FloatTensor([-1])
 
     def log_z_test(self):
         return -self.scale_alphas_log
@@ -83,7 +83,7 @@ class LogUniformVarDist(ParamDist):
         scale_epsilons = _standard_normal(shape, dtype=self.scale_mus.dtype, device=self.scale_mus.device)
         # calculate sample using reparametrization
         scale_sample = self.scale_mus + scale_epsilons * (self.scale_mus) * torch.sqrt(
-            torch.exp(self.scale_alphas_log.data)
+            torch.exp(self.scale_alphas_log)
         )
         param_sample = scale_sample * (self.param_mus + param_epsilons * torch.exp(self.param_std_log))
         return param_sample
