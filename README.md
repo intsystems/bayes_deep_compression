@@ -1,9 +1,9 @@
-![Tests](https://github.com/intsystems/bayes_deep_compression/actions/workflows/python-app.yml/badge.svg)
+![Tests](https://github.com/intsystems/bayes_deep_compression/actions/workflows/variational_tests.yml/badge.svg)
 ![Docs](https://github.com/intsystems/bayes_deep_compression/actions/workflows/gh-pages.yml/badge.svg)
 
 # BayesComp
 
-This python library is an extension of ![PyTorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?style=for-the-badge&logo=PyTorch&logoColor=white) for transforming ordinary neural networks into **bayesian**. Why? Check out our [post]() for motivation and approaches in this topic. You will find here foundamental ideas and practical considerations about bayesian inference.
+This python library is an extension of ![PyTorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?style=for-the-badge&logo=PyTorch&logoColor=white) for transforming ordinary neural networks into **bayesian**. Why? Check out our [post](https://intsystems.github.io/bayes_deep_compression/) for motivation and approaches in this topic. You will find here foundamental ideas and practical considerations about bayesian inference.
 
 ## Documantion
 
@@ -15,7 +15,7 @@ See [`examples/`](examples/) for basic building of bayesian nets and their train
 
 ## Installation
 
-Make sure you have [poetry]() installed and run the following in the project's root
+Make sure you have [poetry](https://python-poetry.org/docs/) installed and run the following in the project's root
 
 ```
     poetry install
