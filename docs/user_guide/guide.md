@@ -1,5 +1,5 @@
-## Обучение байесовской модели на основе модели PyTorch
-Библиотека работает на основе pythorch. Поэтому для начала нужно создать модель из pytorch, которую хотим обучить 
+## Training a Bayesian model based on the PyTorch model
+The library is powered by pythorch. So first we need to create a model from pythorch that we want to train.
 ```python
 import torch
 import torchvision
@@ -11,7 +11,7 @@ import torch.nn.functional as F
 import sys
 ```
 
-Создаем простой классификтор, который будет нашей базовой моделью, кторую мы хотим обучить и запрунить
+Create a simple classifier, which will be our base model, which we want to train and prune.
 
 
 ```python
@@ -38,7 +38,7 @@ class Classifier(nn.Module):
         return x
 ```
 
-Загружаем датасет MNIST, на котором мы хотим обучить наш классификатор
+Load the MNIST dataset on which we want to train our classifier.
 
 
 ```python
@@ -46,24 +46,24 @@ test_dataset = torchvision.datasets.MNIST(root='./data', train=True, download=Tr
 train_dataset = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transforms.ToTensor())
 ```
 
-Далее необходимо превраитить модель в байесовскую. Для этого необходимо обернуть в BayesLayer (LogUniformVarLayer) слои, для которых мы хотим применить байесовское обучение. А также BayesNet (VarBayesNet), которая хранит все байесовские слои и изначальную сеть.
-Для выбора конкретного метода обучения нужно выбрать BaseLoss(LogUniformVarKLLoss), который умеет работать с выбранными слоями.
+Next, we need to turn the model into a Bayesian model. To do this, we need to wrap in BayesLayer (LogUniformVarLayer) the layers for which we want to apply Bayesian learning. And also BayesNet (VarBayesNet), which stores all Bayesian layers and the original network.
+To select a specific learning method, we need to select BaseLoss(LogUniformVarKLLoss), which knows how to work with the selected layers.
 
-## Создание байесовской модели на основе nn.Module
+## Creating a Bayesian model based on nn.Module
 ```python
 from src.methods.bayes.variational.net import LogUniformVarLayer, VarBayesNet #Первым модулоем мы оборачиваем те слои модели, которые мы хотим сделать байесовыми, второй модуль это сама байесовская сеть
 from src.methods.bayes.variational.optimization import LogUniformVarKLLoss #Это лосс байесовской модели, который отвечает за тип обучения. Всегда рекомендуется использовать специализированный лосс, но для большинства распределений его нет
 ```
 
 
-Первым делом создадим нашу базовую модель
+The first thing we'll do is create our base model
 
 
 ```python
 module = Classifier()
 ```
 
-Далее мы часть слоев превратим в байесовски с помощью LogUniformVarBayesModule. И создадим список всех слоев nn.ModuleList([layer1, layer2, ...]), которые мы хотим обучить (в том чилсе слои, которые не являются байесовыми). Заметим, что можно обернуть и всю сеть целиком и передать список состоящий только из нее.
+Next, we turn some layers into Bayesian using LogUniformVarBayesModule. And create a list of all layers nn.ModuleList([layer1, layer2, ...]) that we want to train (including layers that are not Bayesian). Note that it is possible to wrap the whole network and pass a list consisting only of it.
 
 
 ```python
@@ -71,16 +71,14 @@ var_module1 = LogUniformVarLayer(module.conv1)
 bayes_model = VarBayesNet(module, nn.ModuleDict({'conv1': var_module1}))
 ```
 
-## Пример шага обучения
-Посомотрим как выглядит шаг обучения для сети.
+## Example of a training step
+Let's see what the learning step looks like for the network.
 
 ```python
 optimizer = optim.Adam(bayes_model.parameters(), lr=1e-3)
 ```
 
-
-В целом он ничем не отличается от обычного шага, нам только нужно парвильно агрегировать лоссы от нескольких семплов на одном шаге
-
+In general, it is no different from a regular step, we just need to correctly aggregate losses from several samples on one step.
 
 ```python
 #get one sample
@@ -104,22 +102,22 @@ out.backward()
 optimizer.step() 
 ```
 
-Создать распределение сетей можно просто из распределения на параметры и базовой сети
+You can create a network allocation simply from the allocation to parameters and the base network.
 
 
 ```python
 net_distributon = VarBayesModuleNetDistribution(bayes_model.base_module, bayes_model.posterior)
-#Это прунер, которые зануляет веса в зависимости от плотности распределения при 0
+#This is a pruner that zeros the weights depending on the density of the distribution at 00
 net_distributon_pruner = BaseNetDistributionPruner(net_distributon)
-#Здесь мы устанавливаем средние веса модели  
+#Here we set the MAP model weights  
 net_distributon.set_map_params()
-#Пруним на основе определенного порога
+#Prune based on a certain threshold
 net_distributon_pruner.prune(1.9)
 #get basic model for evaluation
 eval_model = net_distributon.get_model()
 ```
 
-Мы получили модель с той же архитектурой что и изначальная
+We got a model with the same architecture as the original one.
 
 
 ```python
@@ -131,7 +129,7 @@ print(bayes_model.state_dict())
 ```
 
 
-Forward делается по последнему сохраненному сэмплу. Заметим, что мы нигде не копируем данные, и модели не инкапсулируется. Поэтому, чтобы отвязать, их неободимо скопировать
+Forward is done on the last saved sample. Note that we do not copy the data anywhere, and the model is not encapsulated. Therefore, in order to unlink them, they must be copied.
 
 
 ```python
@@ -140,32 +138,28 @@ print(bayes_model(torch.zeros_like(image)))
 print(module(torch.zeros_like(image)))
 ```
 
-Для обучения рекомендуется использовать GPU
+It is recommended to use a GPU for training.
 
 ```python
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 device
 ```
 
+## Training with the built-in trainer
+Next we import several modules for training
 
-
-
-    device(type='cuda')
-
-
-
-## Обучение с помощью встроенного тренера
-Далее мы импортируем несколько модулей для обучения
-
-Сам тренер, Параметры тренера, Планировщик beta(коэффициент сооьношения между обычным лоссом и байесовским), и callback для метрики точности
+The trainer itself, Trainer Parameters, Planner beta (ratio between normal and Bayesian loss), and a callback for accuracy metrics.
 ```python
 from src.methods.bayes.variational.trainer import VarBayesTrainer, VarTrainerParams, Beta_Scheduler_Plato, CallbackLossAccuracy
 ```
-Список callbacks
+
+List of callbacks
+
 ```python
 from src.methods.report.base import ReportChain
 ```
-И для примера какой-нибудь callback. Этот модуль callback просто выводит каждый шаг данные от тренера
+
+And for some callback example. This callback module just outputs each step data from the trainer.
 
 ```python
 from src.methods.report.variational import VarBaseReport 
@@ -173,9 +167,10 @@ from src.methods.report.variational import VarBaseReport
 
 
 
-Инициализируем трйенер. Вам не обязательно писать свой тренер. Для всех вариационных методов уже есть готовый
+Initialize the trainer. You don't have to write your own trainer. There is already a ready-made one for all variation methods.
 
-Задаем сначала парметрвы обучения
+Set the training parameters first.
+
 ```python
 BATCH_SIZE=1000
 EPOCHS=4000
@@ -191,39 +186,47 @@ PLATO_TOL = 20
 train_params = VarTrainerParams(EPOCHS, optimizer,fit_loss, kl_loss, SAMPLES, PRUNE, BETA, {'accuracy': CallbackLossAccuracy()})
 ```
 
-Потом создаем байесвскую сеть на основе обычной
+Then we create a Bayesian network based on the usual one
+
 ```python
 base_module = Classifier()
 var_module1 = LogUniformVarLayer(base_module.conv1)
-#Первый аргумент базовая сеть, второй список всех слоев (где нужные из них являются байесовыми)
+# First argument is the base network, second is a list of all layers (where the right ones are Bayesian)
 model = VarBayesNet(base_module, nn.ModuleDict({'conv1': var_module1}))
 ```
 
-Выбираем оптимизатор, который хотим использовать для задачи
+Select the optimizer we want to use for the task
+
 ```python
 optimizer = optim.Adam(model.parameters(), lr=LR)
 ```
-Выбираем loss который мв хотим использовать. Он должен быть совместим с модулем который мы используем. Но заметим, что не все модули совмести со всеми loss, некторые loss являются специфическими для определенных модулей
+
+Select the loss we want to use. It should be compatible with the module we are using. But note that not all modules are compatible with all losses, some losses are specific to certain modules.
+
 ```python
-#Первый лосс это обычный лосс на данные, второй лосс это лосс байесковской модели
+# The first lot is a normal data lot, the second lot is a Bayesian model lot
 fit_loss = nn.CrossEntropyLoss() 
 kl_loss = LogUniformVarKLLoss()
 ```
-Для ставбильности обучения рекомендуется использовать планирофшик beta
+
+For stability of training it is recommended to use planarofschik beta
+
 ```python
-#Используем планировщик коэффицента пропорциональности между fit_loss и kl_loss
+#Use the planner for the proportionality coefficient between fit_loss and kl_loss
 beta = Beta_Scheduler_Plato(BETA, BETA_FAC, PLATO_TOL)
 beta_KL = Beta_Scheduler_Plato(beta.beta, 1 / BETA_FAC, PLATO_TOL, ref = beta, threshold=1e-4)
 
 
-#Данная функция будет выполнятся после каждого шага тренера, 
-#соответсвенно нам требуется сделать шаг планировщика и изменить соотвествующий коэффициент
+#This function will be executed after each coach step, 
+#so we need to make a step in the planner and change the corresponding coefficient.
 def post_train_step(trainer: VarTrainerParams, train_result: VarBayesTrainer.TrainResult):
     beta.step(train_result.fit_loss)
     beta_KL.step(train_result.dist_loss)
     trainer.params.beta = float(beta)
 ```
-Инициализируем обучающий и валидайионный dataset
+
+Initialize training and validation dataset
+
 ```python
 #print(model.base_module.state_dict().keys())
 val_size    = int(VAL_PERCENT * len(train_dataset)) 
@@ -243,26 +246,30 @@ eval_loader = torch.utils.data.DataLoader(v_dataset,
                                         shuffle=False, 
                                         pin_memory=True) 
 ```
-К байесовским моделям спокойно применяются все методы nn.Module, в том числе их можно довольно просто перенести на другой device
+
+All nn.Module methods are safely applied to Bayesian models, including the fact that they can be transferred to another device quite easily
+
 ```python
 model.to(device) 
 ```
 
-После того как мы создали байесовскую сеть, определели loss и задали dataset можно приступить к обучению, с помощью встроенного тренера.
+Once we have created the Bayesian network, defined the loss and set the dataset we can start training, using the built-in trainer.
+
 ```python
-#Если хотим сделать бету фиксированной, то нунжо убрать аргумент [post_train_step]
+#If we want to make the beta fixed, we need to remove the [post_train_step] argument.
 #trainer = VarBayesTrainer(train_params, ReportChain([VarBaseReport()]), train_loader, eval_loader, [post_train_step])
 trainer = VarBayesTrainer(train_params, ReportChain([VarBaseReport()]), train_loader, eval_loader)
 trainer.train(model)
 
 ```
 
-Также эти модели можно целиком сохранять на диск                  
+You can also save these models in their entirety to disk      
+
 ```python
 torch.save(model.state_dict(), 'model_bayes.pt' )
 ```
 
-И загружать с диска
+And boot from the disk
 ```python
 model.load_state_dict(torch.load('model_bayes.pt'))
 image1, label1 = test_dataset[10]
@@ -270,7 +277,7 @@ image2, label2 = test_dataset[11]
 model(image1)
 ```
 
-Также с помощью функции eval() тренера можно оценить модель на валидационном dataset
+You can also use the eval() function of the trainer to evaluate the model on a validation dataset
 
 ```python
 val_loss = 0.0
@@ -287,9 +294,10 @@ acc = test_result.custom_losses['val_accuracy']
 print(f'Loss:{test_result.val_loss}, KL Loss: {test_result.dist_loss}, FitLoss: {test_result.fit_loss}, Accuracy {acc}, Prune parameters: {test_result.cnt_prune_parameters}/{test_result.cnt_params}')
 ```
 
-## Прунинг
-Для прунинга моделей рекомендуется использвать какую-то детерминированную оценку моделей. 
-В примере сначала проводится прунинг по значению -1.0, а потом устанавливается MAP оценка параметров.
+## Pruning.
+For model pruning, it is recommended to use some sort of deterministic model estimation. 
+In the example, the pruning is first performed on the -1.0 value and then the MAP estimation of the parameters is set.
+
 ```python
 model.to(device=device)
 model.prune({'threshold': -1.0})
@@ -297,7 +305,7 @@ model.set_map_params()
 
 ```
 
-Далее эту модель можно использовать как детерминирвоанную
+This model can then be used as a deterministic model
 
 ```python
 image, label = test_dataset[100]
