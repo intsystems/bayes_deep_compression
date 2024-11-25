@@ -30,7 +30,7 @@ class ParamDist(D.distribution.Distribution, ABC):
 
     @abstractmethod
     def log_prob(self, weights):
-        """ 
+        """
         Returns logarithm of probability density function of distibution evaluated at weights.
 
         Args:
@@ -40,8 +40,8 @@ class ParamDist(D.distribution.Distribution, ABC):
 
     @abstractmethod
     def log_z_test(self):
-        """ 
-        Returns parameter which is used to be compared with threshold to estimate 
+        """
+        Returns parameter which is used to be compared with threshold to estimate
         wether this parameter should be pruned. By default it is logarithm of z_test
         or equivalent of it. log_z_test = log(abs(mean)) - log(variance)
         """
@@ -49,16 +49,19 @@ class ParamDist(D.distribution.Distribution, ABC):
 
     @abstractmethod
     def rsample(self, sample_shape: _size = torch.Size()) -> torch.Tensor:
-        """ 
-        Returns parameters sampled using reparametrization trick, so they could be used for 
+        """
+        Returns parameters sampled using reparametrization trick, so they could be used for
         gradient estimation
+
+        Returns:
+            torch.Tensor: sampled parameters
         """
         ...
 
     @property
     @abstractmethod
     def map(self):
-        """ 
+        """
         Returns mode of the distibution. It has a sense of maximum aposteriori estimation
         for bayessian nets.
         """
@@ -67,7 +70,7 @@ class ParamDist(D.distribution.Distribution, ABC):
     @property
     @abstractmethod
     def mean(self):
-        """ 
+        """
         Returns mean of the distibution. It has a sense of non-bias estimation
         for bayessian nets.
         """
@@ -75,7 +78,7 @@ class ParamDist(D.distribution.Distribution, ABC):
 
     @abstractmethod
     def variance(self):
-        """ 
+        """
         Returns variance of the distibution. It has a sense of error estimation
         for bayessian nets and assumed to be used in prunning.
         """

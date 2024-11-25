@@ -18,13 +18,13 @@ def loss_cls(request) -> type[VarDistLoss]:
 
 
 def test_simple_loss(loss_cls: type[VarDistLoss], 
-                     bayes_module_cls: type[BayesModule], 
+                     bayes_module_cls: type[BayesLayer], 
                      module: nn.Module,
                      model_dim: int,
                      num_test_samples: int
 ):
     # create bayes module
-    bayes_module: BayesModule = bayes_module_cls(module)
+    bayes_module: BayesLayer = bayes_module_cls(module)
     # create loss
     loss_func = loss_cls()
 

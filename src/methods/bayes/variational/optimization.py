@@ -49,11 +49,30 @@ class VarDistLoss(BaseLoss):
                     posterior distribution of net parameters.
             prior:  {param_name: ParamDist}
                     prior distribution of net parameters.
+
+        Returns:
+            torch.Tensor: distanse loss for one sampled parameters
         """
         ...
 
     @abstractmethod
-    def aggregate(self, fit_losses: list, dist_losses: list, beta: float) -> AggregationResult:
+    def aggregate(
+        self, fit_losses: list, dist_losses: list, beta: float
+    ) -> AggregationResult:
+        """
+        This method aggregate dist_lossed and fit_losses for whole
+        sampled parameters.
+
+        Args:
+            fit_losses (list):
+                    list of data loss of each sample
+            dist_losses (list):  {param_name: ParamDist}
+                    list of distance loss of each sample
+            beta:  {param_name: ParamDist}
+                    sacle parameter of distance loss
+        Returns:
+            AggregationResult: Aggretion result for whole samples
+        """
         ...
 
 
@@ -61,7 +80,16 @@ class LogUniformVarKLLoss(VarDistLoss):
     def __init__(self):
         super().__init__()
 
-    def forward(self, posterior: dict[str, LogUniformVarDist], **kwargs) -> torch.Tensor:
+    def forward(
+        self, posterior: dict[str, LogUniformVarDist], **kwargs
+    ) -> torch.Tensor:
+        """
+        Computes KL loss between factorized variational distribution and LogUniform prior
+
+        Args:
+            posterior (dict[str, LogUniformVarDist]): factorized normal variational distribution
+                    with hidden variable that is used with LogUniform prior
+        """
         k1 = torch.tensor(0.63576)
         k2 = torch.tensor(1.87320)
         k3 = torch.tensor(1.48695)
@@ -85,7 +113,23 @@ class LogUniformVarKLLoss(VarDistLoss):
 
         return -KL_z + KL_w
 
-    def aggregate(self, fit_losses: list, dist_losses: list, beta: float) -> VarDistLoss.AggregationResult:
+    def aggregate(
+        self, fit_losses: list, dist_losses: list, beta: float
+    ) -> VarDistLoss.AggregationResult:
+        """
+        This method aggregate dist_lossed and fit_losses for whole
+        sampled parameters.
+
+        Args:
+            fit_losses (list):
+                    list of data loss of each sample
+            dist_losses (list):  {param_name: ParamDist}
+                    list of distance loss of each sample
+            beta:  {param_name: ParamDist}
+                    sacle parameter of distance loss
+        Returns:
+            VarDistLoss.AggregationResult: Aggretion result for whole samples
+        """
         fit_loss = torch.mean(torch.stack(fit_losses))
         dist_loss = torch.stack(dist_losses)[0]
         total_loss = fit_loss + beta * dist_loss
@@ -94,9 +138,7 @@ class LogUniformVarKLLoss(VarDistLoss):
 
 class NormVarKLLoss(VarDistLoss):
     def forward(
-        self,
-        posterior: dict[str, LogUniformVarDist],
-        **kwargs
+        self, posterior: dict[str, LogUniformVarDist], **kwargs
     ) -> torch.Tensor:
         r"""
         Computes KL loss between factorized normals
@@ -134,8 +176,24 @@ class NormVarKLLoss(VarDistLoss):
             kl_loss += torch.sum(-0.5 + 0.5 * torch.exp(param) / sigma_opt)
 
         return kl_loss
-    
-    def aggregate(self, fit_losses: list, dist_losses: list, beta: float) -> VarDistLoss.AggregationResult:
+
+    def aggregate(
+        self, fit_losses: list, dist_losses: list, beta: float
+    ) -> VarDistLoss.AggregationResult:
+        """
+        This method aggregate dist_lossed and fit_losses for whole
+        sampled parameters.
+
+        Args:
+            fit_losses (list):
+                    list of data loss of each sample
+            dist_losses (list):  {param_name: ParamDist}
+                    list of distance loss of each sample
+            beta:  {param_name: ParamDist}
+                    sacle parameter of distance loss
+        Returns:
+            VarDistLoss.AggregationResult: Aggretion result for whole samples
+        """
         fit_loss = torch.mean(torch.stack(fit_losses))
         dist_loss = torch.stack(dist_losses)[0]
         total_loss = fit_loss + beta * dist_loss
@@ -160,6 +218,20 @@ class VarRenuiLoss(VarDistLoss):
         posterior: dict[str, ParamDist],
         prior: dict[str, ParamDist],
     ) -> torch.Tensor:
+        """
+        This method computes loss for one sampled parameters.
+
+        Args:
+            param_sample_dict: {param_name: nn.Parameter}
+                    sampled parameters on network.
+            posterior:  {param_name: ParamDist}
+                    posterior distribution of net parameters.
+            prior:  {param_name: ParamDist}
+                    prior distribution of net parameters.
+
+        Returns:
+            torch.Tensor: distanse loss for one sampled parameters
+        """
         prior_likelihood: torch.tensor = 0.0
         posterior_likelihood: torch.tensor = 0.0
 
@@ -175,15 +247,33 @@ class VarRenuiLoss(VarDistLoss):
         return prior_likelihood - posterior_likelihood
 
     def aggregate(self, fit_losses, dist_losses, beta_param) -> torch.Tensor:
+        """
+        This method aggregate dist_lossed and fit_losses for whole
+        sampled parameters.
+
+        Args:
+            fit_losses (list):
+                    list of data loss of each sample
+            dist_losses (list):  {param_name: ParamDist}
+                    list of distance loss of each sample
+            beta:  {param_name: ParamDist}
+                    sacle parameter of distance loss
+        Returns:
+            VarDistLoss.AggregationResult: Aggretion result for whole samples
+        """
         fit_losses = torch.stack(fit_losses)
         dist_losses = torch.stack(dist_losses)
 
         stat_tensor = -fit_losses + beta_param * dist_losses
 
         if self.aggregation == "sample":
-            positions = F.gumbel_softmax(((1 - self.alpha) * stat_tensor.detach()), hard=True, dim=0)
+            positions = F.gumbel_softmax(
+                ((1 - self.alpha) * stat_tensor.detach()), hard=True, dim=0
+            )
         elif self.aggregation == "weighting":
-            positions = F.softmax(((1 - self.alpha) * stat_tensor.detach()), dim=0).detach()
+            positions = F.softmax(
+                ((1 - self.alpha) * stat_tensor.detach()), dim=0
+            ).detach()
         else:
             raise ValueError()
 
