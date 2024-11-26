@@ -43,7 +43,9 @@ plugins:
 nav:
   - Home: index.md
   - User Guide: user_guide/guide.md
-  - Examples: variational/examples.md
+  - Examples: 
+      - 'Variational KL': variational/examples/main/main.md
+      - 'Variational Renyu Divergence': variational/examples/renyu/renui_example.md
   - Reference:
     - 'Parameter Distributions':
       - 'Base Parameter Distributions': reference/methods/bayes/base/distribution.md
