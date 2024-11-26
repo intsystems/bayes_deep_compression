@@ -4,22 +4,44 @@ from typing import Any, Callable, Iterable, List, Optional, Union
 import torch
 from src.methods.bayes.base.net_distribution import BaseNetDistributionPruner
 from src.methods.bayes.base.trainer import BaseBayesTrainer, TrainerParams
-from src.methods.bayes.variational.net import VarBayesModuleNet
+from src.methods.bayes.variational.net import VarBayesNet
 from src.methods.bayes.variational.net_distribution import VarBayesModuleNetDistribution
 from src.methods.bayes.variational.optimization import VarDistLoss
 from src.methods.report.base import ReportChain
-from tqdm import tqdm
+from tqdm.notebook import tqdm
 
 
 class Beta_Scheduler:
-    def __init__(self, beta: float, ref=None, *args, **kwargs) -> None:
+    """
+    Abstract class for beta scheduler a scale parameter between
+    Distance loss and Data loss, the higher beta value is the more important
+    Distance loss is. It is recommended to start with small value (< 0.1) and
+    increase it through learning.
+    """
+
+    def __init__(self, beta: float, ref: 'Beta_Scheduler'| 'VarTrainerParams' =None, *args, **kwargs) -> None:
+        """_summary_
+
+        Args:
+            beta (float): initial beta value
+            ref (Beta_Scheduler| VarTrainerParams): reference to trainer parameters which contains beta attribute 
+                or another Beta_Shelduer
+        """
         self.ref = self
         self.beta = beta
         if ref is not None:
             self.ref = ref
+            "Refernce to trainer parameters which contain beta attribute"
             self.beta = ref.beta
+            "Beta value"
 
     def step(self, loss) -> None:
+        """
+        Abstract class for beta scheduler a scale parameter between
+        Distance loss and Data loss, the higher this value is the more important
+        Distance loss is. It is recommended to start with small value (< 0.1) and
+        increase it through learning.
+        """
         ...
 
     def __float__(self) -> None:
@@ -27,6 +49,15 @@ class Beta_Scheduler:
 
 
 class Beta_Scheduler_Plato(Beta_Scheduler):
+    """
+    Class for plato beta scheduler a scale parameter between
+    Distance loss and Data loss, the higher this value is the more important
+    Distance loss is. It is recommended to start with small value (< 0.1) and
+    increase it through learning. It increase it when target loss stops
+    improving fo more then patience steps. Use ref to specify trainer parameters
+    which contain beta attribute in other way you should assign it manually
+    """
+
     def __init__(
         self,
         beta: float = 1e-2,
@@ -37,21 +68,54 @@ class Beta_Scheduler_Plato(Beta_Scheduler):
         eps: float = 1e-08,
         max_beta: float = 1.0,
         min_beta: float = 1e-9,
-        ref: Optional[Beta_Scheduler] = None,
+        ref=None,
     ):
+        """_summary_
+
+        Args:
+            beta (float): initial beta value
+            alpha (float): factor of beta value by which it multiplied
+            patience (int): Number of steps of loss non-improvement which schelduer should tolerate 
+                before changing beta value
+            is_min (bool): Is it minimiztion problem. So method would consider that loss
+                stops improving when it starts maximizing
+            threshold (float): Algorithm consider loss stops imporving if the next loss is 
+                more(for minimiztion) then min loss more then threshold
+            eps (float): Mininum change of beta. If delta is less there will be no change
+            max_beta (float): Beta would be maxcliped to this value. To work properly
+                ref should reference to trainer parameter
+            min_beta (float): Beta would be mincliped to this value. To work properly
+                ref should reference to trainer parameter
+            ref (Beta_Scheduler| VarTrainerParams): reference to trainer parameters which contains beta attribute 
+                or another Beta_Shelduer
+        """
         super().__init__(beta, ref)
         self.cnt_upward = 0
         self.prev_opt = None
         self.patience = patience
+        """Number of steps of loss non-improvement which schelduer should tolerate 
+        before changing beta value"""
         self.alpha = alpha
+        """Factor by which beta value changing"""
         self.is_min = is_min
+        """Is it minimiztion problem. So method would consider that loss
+        stops improving< when it starts maximizing"""
         self.max_beta = max_beta
+        """Beta would be maxcliped to this value. To work properly
+        ref should reference to trainer parameter"""
         self.min_beta = min_beta
+        """Beta would be mincliped to this value. To work properly
+        ref should reference to trainer parameter"""
         self.threshold = threshold
+        """Algorithm consider loss stops imporving if the next loss is 
+        more(for minimiztion) then min loss more then threshold"""
         self.eps = eps
+        """Mininum change of beta. If delta is less there will be no change"""
 
     def step(self, loss):
-        if (self.prev_opt is not None) and (loss > self.prev_opt - abs(self.prev_opt) * self.threshold):
+        if (self.prev_opt is not None) and (
+            loss > self.prev_opt - abs(self.prev_opt) * self.threshold
+        ):
             self.cnt_upward += 1
         else:
             self.cnt_upward = 0
@@ -73,48 +137,89 @@ class Beta_Scheduler_Plato(Beta_Scheduler):
 
 
 class CallbackLoss:
-    def __init__(self, *args, **kwargs) -> None:
-        ...
+    """Abstract class for additional losses that should
+    be calculated each train step"""
+
+    def __init__(self, *args, **kwargs) -> None: ...
 
     def __call__(self):
+        """Function should return aggregated loss that is
+        calculed through whole states and return it
+        """
         ...
 
-    def step(self, *args, **kwargs):
+    def step(self, *args, **kwargs) -> None:
+        """Method should calculate train step loss
+        using information that train step provided"""
         ...
 
     def zero(self) -> None:
+        """Method should resets values to initial"""
         ...
 
 
 class CallbackLossAccuracy(CallbackLoss):
-    def __init__(self) -> None:
-        self.sum_acc = 0
-        self.samples = 0
+    """Class for accuracy losses for classification problem
+    to add them in callback"""
 
-    def __call__(self):
+    def __init__(self) -> None:
+        self.zero()
+
+    def __call__(self) -> float:
+        """Function returns mean accuracy for whole
+        train steps.
+
+        Returns:
+            float: mean accuracy
+        """
         return self.sum_acc / self.samples
 
-    def step(self, output, label):
+    def step(self, output, label) -> None:
+        """Method should calculate accuracy for train
+
+        Args:
+            output (torch.tensor): predicted logits for each class
+            label (torch.tensor): validatation labels for each object
+        """
         _, predicted = torch.max(output.data, 1)
         self.sum_acc += (predicted == label).sum().item() / label.size(0)
         self.samples += 1
 
     def zero(self) -> None:
+        """Method resets values to initial"""
         self.sum_acc = 0
         self.samples = 0
 
 
 @dataclass
 class VarTrainerParams(TrainerParams):
+    """Class for VarBayesTrainer parameters"""
+
     fit_loss: Callable
+    """Loss for data of non-bayesian model. There could be used 
+    any usual loss that is appropiated for this model and task."""
     dist_loss: VarDistLoss
+    """Loss for distributions of bayesian-model. This loss set up method
+    that you are choose to use. Select it carefully as not all 
+    losses and distribution are compatible"""
     num_samples: int
+    """Number of samples that are used for estimation of losses.
+    Increasing it lowers variance and improves learning in cost of computaion time"""
     prune_threshold: float = -2.2
+    """Threshold by which parameters are pruned. The lower it is the more are pruned.
+    Could be any real number."""
     beta: float = 0.02
+    """Beta is scale factor betwenn distance loss and data loss. The higher beta value 
+    is the more important distance loss is. It is recommended to start with 
+    small value (< 0.1) and increase it through learning."""
     callback_losses: Optional[dict[CallbackLoss]] = None
+    """All additional losses that should be added to callback"""
 
 
-class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
+class VarBayesTrainer(BaseBayesTrainer[VarBayesNet]):
+    """Trainer that is used for all variational methods all it parameters are stored
+    in params(VarTrainerParams) attribute"""
+
     @dataclass
     class EvalResult:
         val_loss: float
@@ -136,8 +241,21 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
         report_chain: Optional[ReportChain],
         train_dataset: Iterable,
         eval_dataset: Iterable,
-        post_train_step_func: Union[None, list[Callable[[BaseBayesTrainer, TrainResult], None]]] = None,
+        post_train_step_func: Union[
+            None, list[Callable[[BaseBayesTrainer, TrainResult], None]]
+        ] = None,
     ):
+        """_summary_
+
+        Args:
+            params (TrainerParams): trianing params that is used to fine-tune training
+            report_chain (Optional[ReportChain]): All callback that should be return by each epoch
+            train_dataset (Iterable): Dataset on which model should be trained
+            eval_dataset (Iterable): Dataset on which epoch of training model should be evaluated
+            post_train_step_func (Union[None, list[Callable[[BaseBayesTrainer, TrainResult], None]]):
+                functions that should be executed after each train step
+        ] 
+        """
         super().__init__(params, report_chain, train_dataset, eval_dataset)
 
         # B8006
@@ -146,7 +264,16 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
 
         self.post_train_step_func = post_train_step_func
 
-    def train(self, model: VarBayesModuleNet) -> VarBayesModuleNetDistribution:
+    def train(self, model: VarBayesNet) -> VarBayesModuleNetDistribution:
+        """It simply train provided model with tarin parameters that is stores in params
+
+        Args:
+            model (VarBayesModuleNet): Any variational bayesian model that should be trained
+
+        Returns:
+            VarBayesModuleNetDistribution: Distribution of variational nets that could be used
+            to sample models or getting map estimation (the most probable) by result of train.
+        """
         losses = []
         val_losses = []
         # Train the model
@@ -211,7 +338,10 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
                 self.report_chain.report(callback_dict)
         return VarBayesModuleNetDistribution(model.base_module, model.posterior)
 
-    def train_step(self, model: VarBayesModuleNet, objects, labels) -> TrainResult:
+    def train_step(self, model: VarBayesNet, objects, labels) -> TrainResult:
+        """
+        Train step for specific batch
+        """
         device = model.device
         # Forward pass
         objects = objects.to(device)
@@ -234,8 +364,9 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
             if self.params.callback_losses is not None:
                 for custom_loss in self.params.callback_losses.values():
                     custom_loss.step(outputs, labels)
-        
-        aggregation_output = self.params.dist_loss.aggregate(fit_losses, dist_losses, float(self.params.beta))
+        aggregation_output = self.params.dist_loss.aggregate(
+            fit_losses, dist_losses, float(self.params.beta)
+        )
         total_loss, fit_loss_total, dist_loss_total = (
             aggregation_output.total_loss,
             aggregation_output.fit_loss,
@@ -256,16 +387,27 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
         return VarBayesTrainer.TrainResult(total_loss, fit_loss_total, dist_loss_total)
 
     def __post_train_step(self, train_result: TrainResult) -> None:
+        """Functions that should exectuted after each taraining"""
         for func in self.post_train_step_func:
             func(self, train_result)
 
-    def eval(self, model: VarBayesModuleNet, eval_dataset) -> "VarBayesTrainer.EvalResult":
+    def eval(
+        self, model: VarBayesNet, eval_dataset
+    ) -> "VarBayesTrainer.EvalResult":
+        """Evalute model on dataset using stored train parameters
+        Args:
+            model (VarBayesModuleNet): Variational bayesian model that should be evaulted
+            eval_dataset: datatest on which model should be evaluted
+        Returns:
+            VarBayesTrainer.EvalResult: Evaluation result that is stored in VarBayesTrainer.EvalResult format"""
         # Evaluate the model on the validation set
         device = model.device
         if self.params.callback_losses is not None:
             for custom_loss in self.params.callback_losses.values():
                 custom_loss.zero()
-        net_distributon = VarBayesModuleNetDistribution(model.base_module, model.posterior)
+        net_distributon = VarBayesModuleNetDistribution(
+            model.base_module, model.posterior
+        )
         net_distributon_pruner = BaseNetDistributionPruner(net_distributon)
         with torch.no_grad():
             batches = 0
@@ -295,9 +437,13 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
                     fit_losses.append(self.params.fit_loss(outputs, labels))
 
                 batches += 1
-            aggregation_output = self.params.dist_loss.aggregate(fit_losses, dist_losses, self.params.beta)
+            aggregation_output = self.params.dist_loss.aggregate(
+                fit_losses, dist_losses, self.params.beta
+            )
             # calculate fit loss based on mean and standard deviation of output
-            aggregation_output = self.params.dist_loss.aggregate(fit_losses, dist_losses, self.params.beta)
+            aggregation_output = self.params.dist_loss.aggregate(
+                fit_losses, dist_losses, self.params.beta
+            )
             val_total_loss, fit_loss_total, dist_loss_total = (
                 aggregation_output.total_loss,
                 aggregation_output.fit_loss,
@@ -323,8 +469,16 @@ class VarBayesTrainer(BaseBayesTrainer[VarBayesModuleNet]):
         return out
 
     def eval_thresholds(
-        self, model: VarBayesModuleNet, thresholds: List[float]
+        self, model: VarBayesNet, thresholds: List[float]
     ) -> List["VarBayesTrainer.EvalResult"]:
+        """Simillar to eval() but evaluate for a list of prune threshold
+
+        Args:
+            model (VarBayesModuleNet): Variational bayesian model that should be evaulted
+            thresholds (List[float]): list of prune thresholds on which model should be evaluted
+            
+        Returns:
+            List[VarBayesTrainer.EvalResult]: Evaluation result that is stored in VarBayesTrainer.EvalResult format"""
         old_thr = self.params.prune_threshold
 
         eval_resilts = []

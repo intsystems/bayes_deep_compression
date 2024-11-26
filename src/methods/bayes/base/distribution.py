@@ -29,19 +29,19 @@ class ParamDist(D.distribution.Distribution, ABC):
         ...
 
     @abstractmethod
-    def log_prob(self, weights):
-        """ 
+    def log_prob(self, weights: torch.Tensor) -> torch.Tensor:
+        """
         Returns logarithm of probability density function of distibution evaluated at weights.
 
         Args:
-            weights: the point at which probability should be evaluated.
+            weights (torch.Tensor): the point at which probability should be evaluated.
         """
         ...
 
     @abstractmethod
     def log_z_test(self):
-        """ 
-        Returns parameter which is used to be compared with threshold to estimate 
+        """
+        Returns parameter which is used to be compared with threshold to estimate
         wether this parameter should be pruned. By default it is logarithm of z_test
         or equivalent of it. log_z_test = log(abs(mean)) - log(variance)
         """
@@ -49,29 +49,42 @@ class ParamDist(D.distribution.Distribution, ABC):
 
     @abstractmethod
     def rsample(self, sample_shape: _size = torch.Size()) -> torch.Tensor:
-        ...
+        """
+        Returns parameters sampled using reparametrization trick, so they could be used for
+        gradient estimation
 
-    @property
-    @abstractmethod
-    def map(self):
-        """ 
-        Returns mode of the distibution. It has a sense of maximum aposteriori estimation
-        for bayessian nets.
+        Returns:
+            torch.Tensor: sampled parameters
         """
         ...
 
     @property
     @abstractmethod
-    def mean(self):
-        """ 
+    def map(self) -> torch.Tensor:
+        """
+        Returns mode of the distibution. It has a sense of maximum aposteriori estimation
+        for bayessian nets.
+
+        Returns:
+            torch.Tensor: MAP parameters
+        """
+        ...
+
+    @property
+    @abstractmethod
+    def mean(self) -> torch.Tensor:
+        """
         Returns mean of the distibution. It has a sense of non-bias estimation
         for bayessian nets.
+
+        Returns:
+            torch.Tensor: mean parameters
         """
         ...
 
     @abstractmethod
     def variance(self):
-        """ 
+        """
         Returns variance of the distibution. It has a sense of error estimation
         for bayessian nets and assumed to be used in prunning.
         """
