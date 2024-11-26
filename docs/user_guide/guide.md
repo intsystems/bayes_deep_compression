@@ -186,15 +186,22 @@ PLATO_TOL = 20
 train_params = VarTrainerParams(EPOCHS, optimizer,fit_loss, kl_loss, SAMPLES, PRUNE, BETA, {'accuracy': CallbackLossAccuracy()})
 ```
 
-Then we create a Bayesian network based on the usual one
+Then we create a Bayesian network based on the one layer of usual one
 
 ```python
 base_module = Classifier()
 var_module1 = LogUniformVarLayer(base_module.conv1)
 # First argument is the base network, second is a list of all layers (where the right ones are Bayesian)
-model = VarBayesNet(base_module, nn.ModuleDict({'conv1': var_module1}))
+model = VarBayesNet(base_module, {'conv1': var_module1})
 ```
 
+Then we create a Bayesian network based on the whole net
+```python
+base_module = Classifier()
+var_module = LogUniformVarLayer(base_module)
+# First argument is the base network, second is a list of all layers (where the right ones are Bayesian)
+model = VarBayesNet(base_module, {'': var_module})
+```
 Select the optimizer we want to use for the task
 
 ```python
