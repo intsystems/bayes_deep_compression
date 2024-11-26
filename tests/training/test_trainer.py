@@ -9,7 +9,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import Dataset, Subset
 
-from src.methods.bayes.variational.net import LogUniformVarBayesModule
+from src.methods.bayes.variational.net import LogUniformVarLayer
 from src.methods.bayes.variational.optimization import LogUniformVarKLLoss
 from src.methods.bayes.variational.trainer import *
 from src.methods.report.base import ReportChain  # Это просто список callback
@@ -44,8 +44,8 @@ def test_simple_trainer(mnist_classifier: nn.Module, mnist_dataset: Dataset):
                          for param_name, param in init_model_params.items()}
 
     # define bayes models
-    var_module = LogUniformVarBayesModule(mnist_classifier)
-    model = VarBayesModuleNet(mnist_classifier, nn.ModuleList([var_module]))
+    var_module = LogUniformVarLayer(mnist_classifier)
+    model = VarBayesNet(mnist_classifier, nn.ModuleDict({"var_module" : var_module}))
 
     optimizer = optim.Adam(model.parameters(), lr=LR)
 

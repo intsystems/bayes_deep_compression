@@ -3,7 +3,6 @@ import torch.nn as nn
 from src.methods.bayes.base.net import BaseBayesNet, BayesLayer
 from src.methods.bayes.variational.distribution import (
     LogUniformVarDist,
-    NormalDist,
     NormalReparametrizedDist,
 )
 from src.utils.attribute import del_attr, set_attr
@@ -41,8 +40,8 @@ class VarBayesNet(BaseBayesNet):
     This net is used for variational bayesian methods.
     """
 
-    def __init__(self, base_module: nn.Module, module_list: nn.ModuleList):
-        super().__init__(base_module, module_list)
+    def __init__(self, base_module: nn.Module, module_dict: nn.ModuleDict):
+        super().__init__(base_module, module_dict)
 
 
 class LogUniformVarLayer(BaseBayesVarLayer):
@@ -76,6 +75,6 @@ class NormalVarBayesLayer(BaseBayesVarLayer):
             module (nn.Module): custom Module layer which is going to be converted to NormalVarBayesLayer
         """
         self.posterior_distribution_cls = NormalReparametrizedDist
-        self.prior_distribution_cls = NormalDist
+        self.prior_distribution_cls = None
         self.is_prior_trainable = False
         super().__init__(module)

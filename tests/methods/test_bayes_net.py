@@ -1,4 +1,4 @@
-""" Testing foundamental building block of our library - BayesModule, and
+""" Testing foundamental building block of our library - BayesLayer, and
      another high-order envelope BaseBayesModuleNet.
 """
 import pytest
@@ -16,7 +16,7 @@ from src.methods.bayes.variational.net import *
 
 
 def test_simple_bayes_module(
-        bayes_module_cls: type[BayesModule], 
+        bayes_module_cls: type[BayesLayer], 
         module: nn.Module,
         model_dim: int,
         num_test_samples: int
@@ -27,7 +27,7 @@ def test_simple_bayes_module(
     num_module_params = len(list(module.parameters()))
 
     # create bayes module
-    bayes_module: BayesModule = bayes_module_cls(module)
+    bayes_module: BayesLayer = bayes_module_cls(module)
 
     # check we have the same number of distributions as Parameters in initial module
     assert len(bayes_module.posterior) == num_module_params
@@ -84,12 +84,12 @@ def test_simple_bayes_net(
     base_module_copy = deepcopy(base_module)
 
     # make bayes net out of base_module
-    bayes_net = VarBayesModuleNet(
+    bayes_net = VarBayesNet(
         base_module,
-        nn.ModuleList([
-            linears_1,
-            LogUniformVarBayesModule(linear_2)
-        ])
+        nn.ModuleDict({
+            "linears_1": linears_1,
+            "bayes_linear_2": LogUniformVarLayer(linear_2)
+        })
     )
 
     # check device
@@ -117,8 +117,8 @@ def test_simple_bayes_net(
                 assert not distr_param.grad.allclose(torch.zeros_like(distr_param.grad))
 
         # check gradients of non-bayes submodules
-        for submodule in bayes_net.module_list:
-            if not isinstance(submodule, BayesModule):
+        for submodule in bayes_net.module_dict.values():
+            if not isinstance(submodule, BayesLayer):
                 for param in submodule.parameters():
                     assert param.requires_grad is True
                     assert param.grad is not None

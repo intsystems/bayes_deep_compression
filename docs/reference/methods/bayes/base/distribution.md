@@ -1,1 +1,1 @@
-::: methods.bayes.base.distribution
+::: src.methods.bayes.base.distribution

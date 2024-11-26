@@ -53,5 +53,5 @@ def mnist_dataset() -> Dataset:
     yield train_dataset
 
     # clean dataset dir
-    shutil.rmtree(data_dir)
-    data_dir.parent.rmdir()
+    # shutil.rmtree(data_dir)
+    # data_dir.parent.rmdir()

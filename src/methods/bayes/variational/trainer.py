@@ -8,7 +8,7 @@ from src.methods.bayes.variational.net import VarBayesNet
 from src.methods.bayes.variational.net_distribution import VarBayesModuleNetDistribution
 from src.methods.bayes.variational.optimization import VarDistLoss
 from src.methods.report.base import ReportChain
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 
 
 class Beta_Scheduler:
@@ -19,7 +19,7 @@ class Beta_Scheduler:
     increase it through learning.
     """
 
-    def __init__(self, beta: float, ref: 'Beta_Scheduler'| 'VarTrainerParams' =None, *args, **kwargs) -> None:
+    def __init__(self, beta: float, ref: Union['Beta_Scheduler', 'VarTrainerParams'] = None, *args, **kwargs) -> None:
         """_summary_
 
         Args:

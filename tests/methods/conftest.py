@@ -23,8 +23,8 @@ def model_dim(request) -> int:
     """
     return request.config.getoption("--model_dim")
 
-@pytest.fixture(params=[LogUniformVarBayesModule, NormalVarBayesModule])
-def bayes_module_cls(request) -> BayesModule:
+@pytest.fixture(params=[LogUniformVarLayer, NormalVarBayesLayer])
+def bayes_module_cls(request) -> BayesLayer:
     return request.param
 
 

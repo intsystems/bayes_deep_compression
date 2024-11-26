@@ -63,7 +63,7 @@ The first thing we'll do is create our base model
 module = Classifier()
 ```
 
-Next, we turn some layers into Bayesian using LogUniformVarBayesModule. And create a list of all layers nn.ModuleList([layer1, layer2, ...]) that we want to train (including layers that are not Bayesian). Note that it is possible to wrap the whole network and pass a list consisting only of it.
+Next, we turn some layers into Bayesian using LogUniformVarLayer. And create a list of all layers nn.ModuleList([layer1, layer2, ...]) that we want to train (including layers that are not Bayesian). Note that it is possible to wrap the whole network and pass a list consisting only of it.
 
 
 ```python

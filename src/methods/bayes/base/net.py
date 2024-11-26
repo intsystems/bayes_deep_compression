@@ -224,11 +224,12 @@ class BaseBayesNet(nn.Module):
         """
         self.sample()
 
-        for module in self.module_list:
+        for module in self.module_dict.values():
             if isinstance(module, BayesLayer):
                 for param_name in module.net_distribution.weight_distribution:
                     cur_param: torch.Tensor = getattr(module.base_module, param_name)
                     setattr(module.base_module, param_name, nn.Parameter(cur_param))
+                    
         model = copy.deepcopy(self.base_module)
         self.flush_weights()
         return model

@@ -29,7 +29,7 @@ class BaseNetDistribution:
         self.weight_distribution: dict[str, ParamDist] = weight_distribution
         """Distribution of parameter for each named parameter of base_module"""
 
-    def detach(self):
+    def detach_(self):
         """
         Detach(Made deepcopy) base module from original module
         """
@@ -69,7 +69,7 @@ class BaseNetDistribution:
         set it. So it sets most probable model.
         """
         for param_name, dist in self.weight_distribution.items():
-            pt = dist.map()
+            pt = dist.map
             # pt = torch.nn.Parameter(pt.to_sparse())
             set_attr(self.base_module, param_name.split("."), pt)
 
@@ -79,7 +79,7 @@ class BaseNetDistribution:
         set it. So it sets model that would be returned at means.
         """
         for param_name, dist in self.weight_distribution.items():
-            pt = dist.mean()
+            pt = dist.mean
             # pt = torch.nn.Parameter(pt.to_sparse())
             set_attr(self.base_module, param_name.split("."), pt)
 
