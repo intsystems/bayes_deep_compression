@@ -40,7 +40,15 @@ class VarBayesNet(BaseBayesNet):
     This net is used for variational bayesian methods.
     """
 
-    def __init__(self, base_module: nn.Module, module_dict: nn.ModuleDict):
+    def __init__(self, base_module: nn.Module, module_dict: dict[str, nn.Module]):
+        """_summary_
+
+        Args:
+            base_module (nn.Module): custom Module which is going to have some BayesModule as submodules
+            module_dict (dict[str, nn.Module]): all submodules of the base_module supposed to be trained. This
+                may be nn.Module or BayesModule. Such division is required because base_module is not
+                registred as Module in this class.
+        """
         super().__init__(base_module, module_dict)
 
 

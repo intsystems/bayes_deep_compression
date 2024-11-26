@@ -1,4 +1,4 @@
-## Создание вариационной байесовской модели на основе существующей из Pytorch
+## Create a variational Bayesian model based on an existing one from Pytorch
 ```python
 import torch
 import torchvision
@@ -10,7 +10,7 @@ import torch.nn.functional as F
 import sys
 ```
 
-Добавляем путь к нашей библиотеке в переменную окружения
+Add the path to our library to the environment variable
 
 
 ```python
@@ -25,7 +25,7 @@ print(sys.path)
     ['../', '/home/sasha/BMM/bayes_deep_compression/examples', '/home/sasha/anaconda3/lib/python312.zip', '/home/sasha/anaconda3/lib/python3.12', '/home/sasha/anaconda3/lib/python3.12/lib-dynload', '', '/home/sasha/anaconda3/lib/python3.12/site-packages', '/home/sasha/anaconda3/lib/python3.12/site-packages/setuptools/_vendor', '/tmp/tmpfzoa1i3d']
 
 
-Создаем простой классификтор, который будет нашей базовой моделью, кторую мы хотим обучить и запрунить
+Create a simple classifier, which will be our base model, which we want to train and enforce
 
 
 ```python
@@ -52,16 +52,16 @@ class Classifier(nn.Module):
         return x
 ```
 
-Посмотрим как работают распределения в нашей библиотеке(Их не обязательно импортировать для работы и обучения байесовской модели)
+Let's see how the distributions in our library work (they do not have to be imported to work and train the Bayesian model).
 
-Первый вид это привычные нам распределения на числа. Импортируем тот, который используется у нас в модели.
+The first type is the usual distributions on numbers. Let's import the one we use in our model.
 
 
 ```python
 from src.methods.bayes.variational.distribution import LogUniformVarDist
 ```
 
-Первый вид это привычные нам распределения на числа.
+The first kind is our familiar distributions on numbers.
 
 
 ```python
@@ -69,7 +69,7 @@ from src.methods.bayes.variational.net_distribution import VarBayesModuleNetDist
 from src.methods.bayes.base.net_distribution import BaseNetDistributionPruner #Также не обязательно для обучения, но нужен, если вы хотите запрунить модель
 ```
 
-Мы можем инициализировать веса распределения просто из параметров модели. При этом используется рекомендуемая начальная инициализация параметров распределения
+We can initialize the distribution weights simply from the model parameters. This uses the recommended initialization of distribution parameters
 
 
 ```python
@@ -84,7 +84,7 @@ LogUniformVarDist.from_parameter(p)
 
 
 
-Это три модуля являются основными для байесовского обучения
+These three modules are the core modules for Bayesian learning
 
 
 ```python
@@ -92,41 +92,41 @@ from src.methods.bayes.variational.net import LogUniformVarLayer, VarBayesNet #�
 from src.methods.bayes.variational.optimization import LogUniformVarKLLoss #Это лосс байесовской модели, который отвечает за тип обучения. Всегда рекомендуется использовать специализированный лосс, но для большинства распределений его нет
 ```
 
-Загружаем датасет MNIST, на котором мы хотим обучить наш классификатор
+Load the MNIST dataset on which we want to train our classifier
 
 
 ```python
 test_dataset = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transforms.ToTensor())
 train_dataset = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transforms.ToTensor())
 ```
-## Пример создания байесовской модели
-Посомтрим внимательнее как нужно создавать байесовскую сеть
+## Example of creating a Bayesian model
+Let's take a closer look at how to create a Bayesian network
 
-Первым делом создадим нашу базовую модель
+First of all, let's create our base model
 
 
 ```python
 module = Classifier()
 ```
 
-Далее мы часть слоев превратим в байесовски с помощью LogUniformVarBayesModule. И создадим список всех слоев nn.ModuleList([layer1, layer2, ...]), которые мы хотим обучить (в том чилсе слои, которые не являются байесовыми). Заметим, что можно обернуть и всю сеть целиком и передать список состоящий только из нее.
+Next, we turn some layers into Bayesian using LogUniformVarBayesModule. And create a list of all layers nn.ModuleList([layer1, layer2, ...]) that we want to train (including layers that are not Bayesian). Note that it is possible to wrap the whole network and pass a list consisting only of it.
 
 
 ```python
 #bayes_model = BayesModule(module)
 #var_module = LogUniformVarBayesModule(module)
 var_module1 = LogUniformVarLayer(module.conv1)
-#bayes_model = VarBayesModuleNet(module, nn.ModuleList([var_module])) #Первый аргумент базовая сеть, второй список всех слоев (где нужные из них являются байесовыми)
+#bayes_model = VarBayesModuleNet(module, nn.ModuleList([var_module]))#First argument is the base network, second is a list of all layers (where the right ones are Bayesian)
 bayes_model = VarBayesNet(module, nn.ModuleDict({'conv1': var_module1}))
 ```
 
-
+Let's see which parameters base module contains. As you can see it contain only weights for deterministic layers
 ```python
+
 
 list(module.named_parameters())
 
 ```
-
     [('conv2.weight',
       Parameter containing:
       tensor([[[[ 0.0234,  0.0521, -0.0416],
@@ -203,7 +203,7 @@ list(module.named_parameters())
 
 
 
-Посомтрим на струкутру получившейся сети
+Let's take a look at the resulting network structure
 
 
 ```python
@@ -263,7 +263,7 @@ print(bayes_model)
     )
 
 
-У выбранной сети отсутвует prior на параметры
+The selected network has no prior on parameters
 
 
 ```python
@@ -277,14 +277,14 @@ bayes_model.prior
 
 
 
-Посомотрим как выглядит шаг обучения для сети
+Let's see what the learning step looks like for the network
 
 
 ```python
 optimizer = optim.Adam(bayes_model.parameters(), lr=1e-3)
 ```
 
-В целом он ничем не отличается от обычного шага, нам только нужно парвильно агрегировать лоссы от нескольких семплов на одном шаге
+In general, it is no different from a regular step, we just need to correctly aggregate losses from several samples on one step
 
 
 ```python
@@ -309,7 +309,7 @@ out.backward()
 optimizer.step() 
 ```
 
-Создать распределение сетей можно просто из распределения на параметры и базовой сети
+You can create a network allocation simply from the allocation to parameters and the base network
 
 
 ```python
@@ -324,7 +324,7 @@ net_distributon_pruner.prune(1.9)
 eval_model = net_distributon.get_model()
 ```
 
-Мы получили модель с той же архитектурой что и изначальная
+We got a model with the same architecture as the original one
 
 
 ```python
@@ -342,139 +342,7 @@ print(eval_model.conv1.weight)
               [-0.0275, -0.2574,  0.1112]]],
     
     
-            [[[ 0.1811,  0.0643,  0.0043],
-              [-0.0697, -0.3153,  0.1617],
-              [-0.2736,  0.1742,  0.2239]]],
-    
-    
-            [[[-0.0079,  0.1319,  0.1114],
-              [-0.0743, -0.0305,  0.3261],
-              [ 0.1474,  0.2353, -0.0412]]],
-    
-    
-            [[[-0.1666, -0.0094,  0.3022],
-              [ 0.0181,  0.0656,  0.2119],
-              [-0.2740, -0.2992,  0.2727]]],
-    
-    
-            [[[-0.0341, -0.0831,  0.1405],
-              [-0.2973, -0.1273,  0.0775],
-              [-0.1233,  0.1936, -0.1301]]],
-    
-    
-            [[[-0.2912, -0.0755, -0.2504],
-              [ 0.2325,  0.1707, -0.1941],
-              [-0.1763, -0.0009,  0.0075]]],
-    
-    
-            [[[ 0.1067,  0.0636, -0.0803],
-              [ 0.0491,  0.0792, -0.0724],
-              [-0.0461, -0.2832, -0.2441]]],
-    
-    
-            [[[-0.2234, -0.0844,  0.2005],
-              [ 0.0104,  0.1018,  0.2696],
-              [-0.2475,  0.2215,  0.1137]]],
-    
-    
-            [[[ 0.1655, -0.1274,  0.0562],
-              [ 0.3273,  0.1708, -0.0631],
-              [ 0.2684, -0.1310,  0.1490]]],
-    
-    
-            [[[ 0.2627,  0.0993, -0.3232],
-              [-0.2633, -0.3007,  0.0946],
-              [ 0.0991, -0.1481, -0.1102]]],
-    
-    
-            [[[-0.0187, -0.1924,  0.2736],
-              [-0.3311,  0.1590, -0.1742],
-              [-0.2950,  0.0072,  0.1725]]],
-    
-    
-            [[[ 0.2748, -0.1911, -0.1158],
-              [ 0.2640, -0.2256,  0.1148],
-              [-0.0955,  0.1412, -0.0662]]],
-    
-    
-            [[[-0.2544, -0.2540, -0.1307],
-              [ 0.1143,  0.2319,  0.0085],
-              [ 0.1871, -0.0444, -0.2196]]],
-    
-    
-            [[[ 0.2049,  0.0344, -0.1371],
-              [ 0.2239,  0.1434,  0.2331],
-              [ 0.0423, -0.2204, -0.0433]]],
-    
-    
-            [[[ 0.2152,  0.1565, -0.1143],
-              [-0.1307, -0.2568,  0.2276],
-              [ 0.2717, -0.1041, -0.2778]]],
-    
-    
-            [[[ 0.2600, -0.2013,  0.0465],
-              [-0.0207, -0.2499,  0.1809],
-              [-0.2584, -0.1109,  0.2360]]],
-    
-    
-            [[[-0.0413, -0.0695, -0.0805],
-              [-0.0384,  0.1990,  0.0694],
-              [-0.1991, -0.3316, -0.2608]]],
-    
-    
-            [[[ 0.2462,  0.2850,  0.2605],
-              [-0.1340, -0.3137, -0.1561],
-              [-0.1800, -0.1497, -0.0844]]],
-    
-    
-            [[[ 0.3137, -0.0616,  0.1300],
-              [-0.3167,  0.1236,  0.0614],
-              [-0.3200,  0.0173,  0.2758]]],
-    
-    
-            [[[ 0.0136,  0.0737,  0.0651],
-              [ 0.2466, -0.0478,  0.1855],
-              [-0.3115, -0.3171,  0.2808]]],
-    
-    
-            [[[ 0.0754, -0.0835, -0.1231],
-              [ 0.2173, -0.2688,  0.2009],
-              [-0.2283, -0.0892, -0.3230]]],
-    
-    
-            [[[ 0.1153, -0.3162, -0.1761],
-              [ 0.0442,  0.0197, -0.0828],
-              [-0.2416, -0.2345, -0.1866]]],
-    
-    
-            [[[-0.0075, -0.2679, -0.1568],
-              [-0.0289,  0.2549,  0.0113],
-              [ 0.1463, -0.0132, -0.0738]]],
-    
-    
-            [[[-0.1363,  0.2962,  0.1541],
-              [ 0.1455, -0.2070,  0.2709],
-              [ 0.2411,  0.1617, -0.3230]]],
-    
-    
-            [[[ 0.0703,  0.2055,  0.0148],
-              [-0.2715,  0.3027,  0.1047],
-              [-0.1760, -0.2697, -0.0239]]],
-    
-    
-            [[[ 0.2263,  0.0829, -0.2038],
-              [-0.0417, -0.2553, -0.2300],
-              [ 0.1508, -0.1283, -0.1079]]],
-    
-    
-            [[[ 0.0450, -0.0982, -0.3176],
-              [-0.3194, -0.0502, -0.1965],
-              [ 0.0155,  0.2240, -0.0971]]],
-    
-    
-            [[[-0.2008,  0.3249,  0.2010],
-              [-0.2925,  0.2783, -0.0207],
-              [-0.1719,  0.0839, -0.0917]]],
+            ...
     
     
             [[[ 0.1589,  0.2691,  0.0279],
@@ -544,7 +412,7 @@ bayes_model.state_dict()
 
 
 
-Forward делается по последнему сохраненному сэмплу. Заметим, что мы нигде не копируем данные, и модели не инкапсулируется. Поэтому, чтобы отвязать, их неободимо скопировать
+Forward is done on the last saved sample. Note that we do not copy the data anywhere, and the model is not encapsulated. Therefore, in order to unlink them, they must be copied
 
 
 ```python
@@ -558,7 +426,7 @@ print(module(torch.zeros_like(image)))
     tensor([[ 0.0305, -0.0716, -0.1202, -0.1129, -0.1449, -0.0620, -0.0262, -0.0984,
               0.0281, -0.0110]], grad_fn=<AddmmBackward0>)
 
-
+We suggest to run this example on GPU
 
 ```python
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -571,8 +439,8 @@ device
     device(type='cuda')
 
 
-## Пример обучения байесовской модели
-Далее мы импортируем несколько модулей для обучения
+## Example of training a Bayesian model
+Next we import several modules for training
 
 
 ```python
@@ -664,7 +532,8 @@ trainer.train(model)
 
       0%|          | 2/4000 [00:03<1:56:51,  1.75s/it]
 
-Посмотрим на качество обученный модели на валидационном датасете
+## Evaluate model using trainer
+Let's look at the quality of the trained model on the validation dataset
 
 ```python
 val_loss = 0.0
@@ -683,8 +552,8 @@ print(f'Loss:{test_result.val_loss}, KL Loss: {test_result.dist_loss}, FitLoss: 
 
     Loss:16906.90234375, KL Loss: 1690681.375, FitLoss: 0.09073139727115631, Accuracy 0.98, Prune parameters: 221821.0/421642
 
-## Получение детерминированной модели
-Запруним модель встроенным ее метоом. В качестве детеримнированныой модели выберем MAP оценку
+## Obtaining a deterministic model
+Let's lock the model by its built-in method. As a deterministic model we choose the MAP estimator
 ```python
 model.to(device=device)
 model.prune({'threshold': 1.0})
@@ -692,7 +561,8 @@ model.set_map_params()
 
 ```
 
-Посмотрим на пример классификации
+Let's look at how the model categorizes the numbers
+
 ```python
 image, label = test_dataset[100]
 plt.imshow(image.permute(1, 2, 0), cmap="gray")
@@ -708,7 +578,7 @@ print("Label:", label)
     
 
 
-
+It classify it right and deterministic
 ```python
 torch.max(model(image.cuda()).data, 1)
 ```
