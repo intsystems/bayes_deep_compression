@@ -154,7 +154,7 @@ class BaseBayesNet(nn.Module):
     as submodules.
     """
 
-    def __init__(self, base_module: nn.Module, module_dict: nn.ModuleDict):
+    def __init__(self, base_module: nn.Module, module_dict: dict[str, nn.Module]):
         """_summary_
 
         Args:
@@ -167,6 +167,9 @@ class BaseBayesNet(nn.Module):
         # self.__dict__["base_module"] = base_module
         self.base_module = base_module
         self.module_dict = module_dict
+        self.module_list = nn.ModuleList()
+        for module in module_dict.values():
+            self.module_list.append(module)
 
     def sample(self) -> dict[str, nn.Parameter]:
         """Sample new parameters of base_module from current posterior distribution
@@ -179,7 +182,7 @@ class BaseBayesNet(nn.Module):
             if isinstance(module, BayesLayer):
                 parameter_dict = module.sample()
                 for parameter_name, p in parameter_dict.items():
-                    param_sample_dict[f"{module_name}.{parameter_name}"] = p
+                    param_sample_dict[self.get_path(module_name, parameter_name)] = p
         return param_sample_dict
 
     @property
@@ -194,7 +197,7 @@ class BaseBayesNet(nn.Module):
         weights: dict[str, nn.Parameter] = {}
         for module_name, module in self.module_dict.items():
             for parameter_name, p in module.weights.items():
-                weights[f"{module_name}.{parameter_name}"] = p
+                weights[self.get_path(module_name, parameter_name)] = p
         return weights
 
     @property
@@ -260,9 +263,20 @@ class BaseBayesNet(nn.Module):
         for module_name, module in self.module_dict.items():
             if isinstance(module, BayesLayer):
                 for parameter_name, parameter_posterior in module.posterior.items():
-                    posteriors[f"{module_name}.{parameter_name}"] = parameter_posterior
+                    posteriors[self.get_path(module_name, parameter_name)] = parameter_posterior
         return posteriors
-
+    def get_path(self, module_name:str, parameter_name:str) -> str:
+        """
+        Args:
+            module_name (str):  module name
+            parameter_name (str):  parameter name
+        Returns:
+            str: path to weight
+        """
+        if(module_name == ""):
+            return parameter_name
+        else:
+            return f"{module_name}.{parameter_name}"
     @property
     def prior(self) -> dict[str, Optional[ParamDist]]:
         """
@@ -280,5 +294,5 @@ class BaseBayesNet(nn.Module):
                 module_prior = module.prior
                 priors.update(module_prior)
                 for parameter_name, parameter_prior in module.prior.items():
-                    priors[f"{module_name}.{parameter_name}"] = parameter_prior
+                    priors[self.get_path(module_name, parameter_name)] = parameter_prior
         return priors
