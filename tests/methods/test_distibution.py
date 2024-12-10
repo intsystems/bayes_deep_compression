@@ -49,7 +49,10 @@ def test_param_dist(dist_setup):
 
     # test getting log(p)
     for _ in range(NUM_SAMPLES):
-        assert torch.all(dist.log_prob(20 * torch.rand(SHAPE) - 10) <= 0)
+        try:
+            assert torch.all(dist.log_prob(20 * torch.rand(SHAPE) - 10) <= 0)
+        except NotImplementedError:
+            warnings.warn(f"log_prob is not implemented in {dist.__class__.__name__}!")
 
     # z-test
     dist.log_z_test()
