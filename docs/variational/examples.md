@@ -1,1 +1,0 @@
-The section is being developed. Please, see [examples](https://github.com/intsystems/bayes_deep_compression/tree/semkin_variational/examples) on GitHub for now.

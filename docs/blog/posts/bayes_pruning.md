@@ -19,15 +19,15 @@ authors:
 
 Using deep learning in solving complex, real-world problems has become quite an engineering routine. But we should never forget about the probabilistic sense inside models and loss minimization. So here, we are going to recall that probabilistic framework and extend it to the *Bayesian* framework. Such switching will give us pleasant perks but it is not always for free. The main applicition presented in the blog will be neural networks *pruning* but other directions will be mentioned too.
 
-So we will present 4 bayesian techniques to envelope any task involving neural networks. If you get interested in the topic and want to use it on practice, you are welcome at our *pytoch* [library](https://github.com/intsystems/bayes_deep_compression).
+So we will present 4 Bayesian techniques to envelope any task involving neural networks. If you get interested in the topic and want to use it on practice, you are welcome at our *pytoch* [library](https://github.com/intsystems/bayes_deep_compression).
 
 <!-- more -->
 
-## Making neural network bayesian
+## Making neural network Bayesian
 
 The usual ML problem setup consists in minimising the loss function $L$ between the train targets $y$ and parametrical model $f_{\mathbf{w}}(\mathbf{x})$. We assume the model to be some neural network parameterized by $\mathbf{w}$. At the same time, the loss together with the model define data's distribution $p(y | \mathbf{x}, \mathbf{w})$. Minimising the loss w.r.t. $\mathbf{w}$ is equivalent to finding maximum likelihood estimation $\hat{\mathbf{w}}$ of model's parameters. Finally, to obtain target distribution on the **new** *object* $\hat{\mathbf{x}}$ we just use learnt estimation and have $p(y | \hat{\mathbf{x}}, \hat{\mathbf{w}})$.
 
-The bayesian approach complements the model with a *prior* distribution $p(\mathbf{w} | \Theta)$ . It is generally parameterized by *hyperparameters* $\Theta$ (but prior can be a fixed distribution as well). This move kind of changes the game because now target distribution for a new object $\hat{\mathbf{x}}$ is trickier
+The Bayesian approach complements the model with a *prior* distribution $p(\mathbf{w} | \Theta)$ . It is generally parameterized by *hyperparameters* $\Theta$ (but prior can be a fixed distribution as well). This move kind of changes the game because now target distribution for a new object $\hat{\mathbf{x}}$ is trickier
 
 $$
    p(y | \hat{\mathbf{x}}, \Theta) = \int p(\mathbf{w} | y, \mathbf{x}, \Theta) p(y | \hat{\mathbf{x}}, \mathbf{w}) d\mathbf{w} = \mathbb{E}_{\mathbf{w} \sim p(\mathbf{w} | y, \mathbf{x}, \Theta)} [p(y | \hat{\mathbf{x}}, \mathbf{w})] , \label{new_point}\tag{1}
@@ -48,13 +48,13 @@ Some other bayes features:
 *Confidence shift in distribution after incorporating prior knowledge*
 ///
 
-- Bayes can be used to perform [*model selection*](https://en.wikipedia.org/wiki/Model_selection), for example see [*hidden state models*](https://en.wikipedia.org/wiki/Latent_space) and learning [*mixture of gaussians*](https://scikit-learn.org/1.5/modules/mixture.html#variational-bayesian-gaussian-mixture).
+- Bayes can be used to perform [*model selection*](https://en.wikipedia.org/wiki/Model_selection), for example see [*hidden state models*](https://en.wikipedia.org/wiki/Latent_space) and learning [*mixture of gaussians*](https://scikit-learn.org/1.5/modules/mixture.html#variational-Bayesian-gaussian-mixture).
 
 We have provided only a handful of applications, but this might be enough to spark your interest. Now, we will go through methods that will overcome problems with bayessian framework and make it usable.
 
 ## Variational inference
 
-One of the ways to add a bayesian layer of inference to your neural network - *variational inference* principle. It is built upon special function called [*evidence*](https://en.wikipedia.org/wiki/Bayesian_inference#Formal_explanation) which is
+One of the ways to add a Bayesian layer of inference to your neural network - *variational inference* principle. It is built upon special function called [*evidence*](https://en.wikipedia.org/wiki/Bayesian_inference#Formal_explanation) which is
 
 $$
     p(y | \mathbf{x}, \Theta) = \mathbb{E}_{p(\mathbf{w} | y, \mathbf{x}, \Theta)} [p(y | \mathbf{x}, \mathbf{w})].
@@ -130,7 +130,7 @@ where $\mathbf{w}_i \sim q(\mathbf{w} | \phi)$. Several particular solutions wil
 
 Ideally, the class of variational distributions parametrized by $\phi$ should contain $p(\mathbf{w} | y, \mathbf{x}, \Theta)$. If $q$ is exactly posterior then the ELBO will be exactly the evidence (not just lower bound)!
 
-Practically, we don't know the exact posterior but we know it up to the normalisation. It is followed from thes bayesian theorem:
+Practically, we don't know the exact posterior but we know it up to the normalisation. It is followed from thes Bayesian theorem:
 
 $$
    p(\mathbf{w} | y, \mathbf{x}, \Theta) \propto p(y | \mathbf{w}, \mathbf{x}) p(\mathbf{w} | \Theta).
@@ -157,7 +157,7 @@ Similar rules can be derived for more tricky distributions like *log-uniform* or
 
 ## Renyi-divergence
 
-Another bayesian approach ([Yingzhen Li et. al.](https://arxiv.org/abs/1602.02311), 2016) is actually an extension of the variational inference. The main idea is to substitute KL divergence with the [*Renyi* divergence](https://en.wikipedia.org/wiki/R%C3%A9nyi_entropy)
+Another Bayesian approach ([Yingzhen Li et. al.](https://arxiv.org/abs/1602.02311), 2016) is actually an extension of the variational inference. The main idea is to substitute KL divergence with the [*Renyi* divergence](https://en.wikipedia.org/wiki/R%C3%A9nyi_entropy)
 
 $$
    D_{\alpha} [p || q] = \frac{1}{\alpha - 1} \log \int p(\mathbf{w})^{\alpha} q(\mathbf{w})^{1 - \alpha} d \mathbf{w}.
@@ -171,7 +171,7 @@ $$
    \text{ELBO} = \underset{\alpha \to 1}{\lim} \text{ELBO}_{\alpha} \le \text{ELBO}_{\alpha_+} \le p(y | x) = \underset{\alpha \to 0}{\lim} \text{ELBO}_{\alpha} \le \text{ELBO}_{\alpha_-}.
 $$
 
-Visual example below demonstrates evolution of fitted variational distribution depending on $\alpha$. The task is [bayesian linear regression](https://en.wikipedia.org/wiki/Bayesian_linear_regression). **Black** line corresponds to the exact posterior. It is multivariate gaussian with covariant components. Chosen variational distribution family is factorized gaussians.
+Visual example below demonstrates evolution of fitted variational distribution depending on $\alpha$. The task is [Bayesian linear regression](https://en.wikipedia.org/wiki/Bayesian_linear_regression). **Black** line corresponds to the exact posterior. It is multivariate gaussian with covariant components. Chosen variational distribution family is factorized gaussians.
 
 We go from the <font color="cyan"> cyan circle </font> corresponding to $\alpha \to \infty$. It can be referred to as *mode-seeking* ELBO regime. This gaussian lies exactly inside true gaussian and is perfectly centred around the mode. Then, decreasing $\alpha$ to 1 we obtain <font color="violet"> violet circle </font> corresponding to conventional ELBO. After that, we get more inflated <font color="blue"> blue circle </font> with $\alpha = 0.5$ and *optimal* <font color="green"> green circle </font> with $\alpha = 0$. In this case, variational distribution is true marginal distribution of the parameters
 
@@ -217,7 +217,7 @@ So, regarding discussed guarantees the approach is possible to be realized on pr
 
 ## Kroneker-factorized Laplace
 
-The key advantage of the last bayesian approach ([Hippolyt Ritter et. al.](https://discovery.ucl.ac.uk/id/eprint/10080902/1/kflaplace.pdf), 2018) is that it is applicable to **trained** NNs with definite *layer structure*. We assume each layer to be linear transform followed by activation function. Imagine we have no prior for now, only likelihood $\log p(y | \mathbf{w}, \mathbf{x})$. We can use second order approximation around likelihood maximum denoted by $\mathbf{w}^*$
+The key advantage of the last Bayesian approach ([Hippolyt Ritter et. al.](https://discovery.ucl.ac.uk/id/eprint/10080902/1/kflaplace.pdf), 2018) is that it is applicable to **trained** NNs with definite *layer structure*. We assume each layer to be linear transform followed by activation function. Imagine we have no prior for now, only likelihood $\log p(y | \mathbf{w}, \mathbf{x})$. We can use second order approximation around likelihood maximum denoted by $\mathbf{w}^*$
 
 $$
    \log p(y | \mathbf{w}, \mathbf{x}) \approx \log p(y | \mathbf{w}^*, \mathbf{x}) + (\mathbf{w} - \mathbf{w}^*)^{\text{T}} H (\mathbf{w} - \mathbf{w}^*).
@@ -264,4 +264,4 @@ $$
 
 ## Conclusion
 
-We have enough mathematics for now :relieved:. I hope you have enjoyed the concept of bayesian inference and now understand how it can be useful in applications. Some practical python libraries are [Bayesian Neural Networks](https://github.com/JavierAntoran/Bayesian-Neural-Networks?tab=readme-ov-file#stochastic-gradient-hamiltonian-monte-carlo), [pyro](https://pyro.ai/) and our developing library [bayescomp](https://github.com/intsystems/bayes_deep_compression). You can find many examples of using bayes approach in their docs.
+We have enough mathematics for now :relieved:. I hope you have enjoyed the concept of Bayesian inference and now understand how it can be useful in applications. Some practical python libraries are [Bayesian Neural Networks](https://github.com/JavierAntoran/Bayesian-Neural-Networks?tab=readme-ov-file#stochastic-gradient-hamiltonian-monte-carlo), [pyro](https://pyro.ai/) and our developing library [bayescomp](https://github.com/intsystems/bayes_deep_compression). You can find many examples of using bayes approach in their docs.

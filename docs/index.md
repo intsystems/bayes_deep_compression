@@ -1,6 +1,6 @@
 # BayesComp
 
-This python library is an extension of *pytorch* :fire: for transforming ordinary neural networks into **bayesian**. Why? Check out our [post](https://intsystems.github.io/bayes_deep_compression/blog/) for motivation and approaches in this topic. You will find here foundamental ideas and practical considerations about bayesian inference.
+This python library is an extension of *pytorch* :fire: for transforming ordinary neural networks into **Bayesian**. Why? Check out our [post](https://intsystems.github.io/bayes_deep_compression/blog/) for motivation and approaches in this topic. You will find here foundamental ideas and practical considerations about Bayesian inference.
 
 ## Authors
 
