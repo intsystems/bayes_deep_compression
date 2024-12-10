@@ -171,11 +171,21 @@ $$
    \text{ELBO} = \underset{\alpha \to 1}{\lim} \text{ELBO}_{\alpha} \le \text{ELBO}_{\alpha_+} \le p(y | x) = \underset{\alpha \to 0}{\lim} \text{ELBO}_{\alpha} \le \text{ELBO}_{\alpha_-}.
 $$
 
-Let's look at the visual example below. **Black** line corresponds to the exact posterior. As we can see it is multivariate gaussian with covariant components. Our variational distribution family will be factorized gaussians. We go from the <font color="cyan"> cyan circle </font> corresponding to $\alpha \to \infty$. It can be referred to as *mode-seeking* ELBO regime, our gaussian lies exactly inside true gaussian and is perfectly centred around the mode. Then, decreasing $\alpha$ to 1 we obtain <font color="violet"> violet circle </font> corresponding to conventional ELBO. After that, we get more inflated <font color="blue"> blue circle </font> with $\alpha = 0.5$ and optimal <font color="green"> green circle </font> with $\alpha = 0$. The latter corresponds to the true marginal distributions of the parameters $q (\mathbf{w}) = p(w_1 | y, x) \cdot p(w_2 | y, x)$ and gives true evidence via $\text{ELBO}_{0}$. If we decrease $\alpha$ further we switch to the so called *mass-covering* regime. The  <font color="red"> red circle </font> corresponds to $\alpha \to -\infty$. As we can see it hasn't inflated over the whole plane but has become a perfect encapsulation of the true posterior. To conclude, fitting models for different $\alpha$ is a great way to control distribution of probability mass around the true posterior.
+Visual example below demonstrates evolution of fitted variational distribution depending on $\alpha$. The task is [bayesian linear regression](https://en.wikipedia.org/wiki/Bayesian_linear_regression). **Black** line corresponds to the exact posterior. It is multivariate gaussian with covariant components. Chosen variational distribution family is factorized gaussians.
+
+We go from the <font color="cyan"> cyan circle </font> corresponding to $\alpha \to \infty$. It can be referred to as *mode-seeking* ELBO regime. This gaussian lies exactly inside true gaussian and is perfectly centred around the mode. Then, decreasing $\alpha$ to 1 we obtain <font color="violet"> violet circle </font> corresponding to conventional ELBO. After that, we get more inflated <font color="blue"> blue circle </font> with $\alpha = 0.5$ and *optimal* <font color="green"> green circle </font> with $\alpha = 0$. In this case, variational distribution is true marginal distribution of the parameters
+
+$$
+   q (\mathbf{w}) = p(w_1 | y, x) \cdot p(w_2 | y, x)
+$$
+
+and delivers true evidence $\text{ELBO}_{0} = \text{ELBO}$.
+
+If $\alpha$ is decreased further, we switch to the so called *mass-covering* regime. The  <font color="red"> red circle </font> corresponds to $\alpha \to -\infty$. As we can see it hasn't inflated over the whole plane but has become a perfect encapsulation of the true posterior. To conclude, fitting models for different $\alpha$ is a great way to control distribution of probability mass around the true posterior.
 
 ![Approximate posterior](img/renui_posterior.png){ align=center }
 /// caption
-*Posterior distributions for different*
+*Evolution of variational distributions for different $\alpha$*
 ///
 
 ### Renyi approximation
@@ -183,31 +193,31 @@ Let's look at the visual example below. **Black** line corresponds to the exact 
 Let's rewrite $\text{ELBO}_{\alpha}$ in another way
 
 $$
-   \text{ELBO}_{\alpha} = \frac{1}{1 - \alpha} \log \mathbb{E}_q [\left( \frac{p(y, \mathbf{w} | x)}{q(\mathbf{w})} \right)^{1 - \alpha}]
+   \text{ELBO}_{\alpha} = \frac{1}{1 - \alpha} \log \mathbb{E}_{\mathbf{w} \sim q} [\left( \frac{p(y, \mathbf{w} | x)}{q(\mathbf{w})} \right)^{1 - \alpha}]
 $$
 
-Unfortunately, this loss is equally intractable for deep learning models as ELBO in variational inference. But the key walkarounds towards feasibility stay the same: the reparametrization trick and monte-carlo estimation. Imagine we have $\mathbf{w} = h(\mathbf{w}, \phi, \epsilon), \ \epsilon \sim p(\epsilon)$ and $K$ samples from this distribution, then estimated loss is
+Unfortunately, this loss is equally intractable for deep learning models as ELBO in variational inference. But key walkarounds towards feasibility stay the same: the reparametrization trick and monte-carlo estimation. Imagine we have $\mathbf{w} = h(\mathbf{w}, \phi, \epsilon), \ \epsilon \sim p(\epsilon)$ and $K$ samples from this distribution, then estimated loss is
 
 \begin{multline}
-   \text{ELBO}_{\alpha} = \frac{1}{1 - \alpha} \log \mathbb{E}_{\epsilon} [\left( \frac{p(y, \mathbf{w} | x)}{q(\mathbf{w})} \right)^{1 - \alpha}] \approx \\ \approx \widehat{\text{ELBO}}_{\alpha} = \frac{1}{1 - \alpha} \log \frac{1}{K} \sum_{i = 1}^K [\left( \frac{p(y, \mathbf{w}_i | x)}{q(\mathbf{w}_i)} \right)^{1 - \alpha}].
+   \text{ELBO}_{\alpha} = \frac{1}{1 - \alpha} \log \mathbb{E}_{\epsilon} [\left( \frac{p(y, \mathbf{w} | x)}{q(\mathbf{w})} \right)^{1 - \alpha}] \approx \\ \approx \frac{1}{1 - \alpha} \log \frac{1}{K} \sum_{i = 1}^K [\left( \frac{p(y, \mathbf{w}_i | x)}{q(\mathbf{w}_i)} \right)^{1 - \alpha}] =: \widehat{\text{ELBO}}_{\alpha}.
 \end{multline}
 
-So as $p(\epsilon)$ is usually standard normal it is easy to take gradient over this estimation.
+As $p(\epsilon)$ is usually standard normal it is easy to take gradient over this estimation.
 
-The only problem here is that the new loss is actually biassed. But this bias *monotonous* vanishes with more samples. Moreover, with fixed $K$ you can play around with $\alpha$ as $\widehat{\text{ELBO}}_{\alpha}$ is *non-decreasing* in this case. Combining earlier facts we can conclude that either $\widehat{\text{ELBO}}_{\alpha} < p(y|x)$ for all $\alpha$ or their exists **optimal** $\alpha_K$ such that $\widehat{\text{ELBO}}_{\alpha_K} = p(y|x)$!
+The only problem here is that the new loss is actually *biased*. But as authors of the approach proved this bias *monotonously* vanishes with more samples. Moreover, with fixed $K$ you can play around with $\alpha$ as $\widehat{\text{ELBO}}_{\alpha}$ is *non-decreasing* on $\alpha$. Combining earlier facts we can obtain that either $\widehat{\text{ELBO}}_{\alpha} < p(y|x)$ for all $\alpha$ or their exists **optimal** $\alpha_K$ such that $\widehat{\text{ELBO}}_{\alpha_K} = p(y|x)$!
+
+The illustration below shows relations between $\text{ELBO}_{\alpha}$ for diffrent $\alpha$/fixed $K$ and vice versa. It is denoted here as $\mathcal{L}_{\alpha}$. True evidence is denoted as $\log p(x)$. Conventional elbo here is $\mathcal{L}_{VI}$.
 
 ![Renyi behavior](img/renui_sampled.png){ width=60% }
 /// caption
 *Illustration of how Renyi loss is changed under different variations*.
-
-$\mathcal{L}_{\alpha} = \text{ELBO}_{\alpha}$, $\mathcal{L}_{VI} = \text{ELBO}$.
 ///
 
-All in all, we have paved the way to practical realisation of the approach and have given a prescription for scalar hyperparameter optimization.
+So, regarding discussed guarantees the approach is possible to be realized on practise.
 
 ## Kroneker-factorized Laplace
 
-The key advantage of the last bayesian approach ([Hippolyt Ritter et. al.](https://discovery.ucl.ac.uk/id/eprint/10080902/1/kflaplace.pdf), 2018) is that it is applicable to **trained** NNs with definite *layer structure*. Imagine we have no prior for now, only likelihood $\log p(y | \mathbf{w}, \mathbf{x})$. We can use second order approximation around likelihood maximum denoted by $\mathbf{w}^*$
+The key advantage of the last bayesian approach ([Hippolyt Ritter et. al.](https://discovery.ucl.ac.uk/id/eprint/10080902/1/kflaplace.pdf), 2018) is that it is applicable to **trained** NNs with definite *layer structure*. We assume each layer to be linear transform followed by activation function. Imagine we have no prior for now, only likelihood $\log p(y | \mathbf{w}, \mathbf{x})$. We can use second order approximation around likelihood maximum denoted by $\mathbf{w}^*$
 
 $$
    \log p(y | \mathbf{w}, \mathbf{x}) \approx \log p(y | \mathbf{w}^*, \mathbf{x}) + (\mathbf{w} - \mathbf{w}^*)^{\text{T}} H (\mathbf{w} - \mathbf{w}^*).
@@ -221,7 +231,7 @@ $$
 
 Actually, the result would be the same even if we had some fixed prior in the beginning. In this case, the likelihood function is substituted for posterior $p(\mathbf{w} | y, \mathbf{x})$. Now $\mathbf{w}^*$ is the MAP model, $H$ is the hessian of the posterior. Simple example of this transition is incorporation of the L2-regularization.
 
-Laplace approximation is not a panacea. The picture below illustrates how far from reality it can be. But for now we assume that it's applicable.
+It must be said that laplace approximation is not a panacea. The picture below illustrates how far from reality it can be. But for now we assume that it's applicable.
 
 ![Laplace approximation example](img/laplace_modes.png){ width=70% }
 /// caption
@@ -232,22 +242,26 @@ As you can see, it is not always quite accurate.
 
 ### Pruning strategy
 
-If we knew $H$ and $\mathbf{w}^*$, pruning could be based on the probability mass in $w_i = 0$.So it is similar to the pruning in the [variational approach](#variational-inference). The major concern here is again factorization into parameters groups, namely by NN's layers. Hippolyt Ritter et. al. showed that if we assume a layer's independence, the hessian will factorize into a block-diagonal matrix. Therefore we will have independent gaussians for each layer! Computing marginals $q(w_i)$ is now absolutely feasible.
+If we knew $H$ and $\mathbf{w}^*$, pruning could be based on the probability mass in $w_i = 0$.So it is similar to the pruning in the [variational approach](#variational-inference). The major concern here is again factorization into parameters groups, namely by NN's layers. The authors of the approach showed that if we assume layer's independence, the hessian will factorize into a block-diagonal matrix. Therefore we will have independent gaussians for each layer! Computing marginals $q(w_i)$ will be absolutely feasible.
 
 ### Hessian factorization
 
-Some comments on the mentioned hessian factorization. Denote hessian of the layer $\lambda$ as $H_{\lambda}$, then
+Let's see what is the hessian's structure on each layer. Denote hessian of the layer $\lambda$ as $H_{\lambda}$, then it can be shown that
 
 $$
    \mathbb{E}[H_{\lambda}] = \mathbb{E}[\mathcal{Q}_{\lambda}] \otimes \mathbb{E}[\mathcal{H}_{\lambda}],
 $$
 
-where $\mathcal{Q}_{\lambda} = a_{\lambda-1}^{\text{T}} a_{\lambda-1}$ is covariance of the incoming activations $a_{\lambda-1}$ and $\mathcal{H}_{\lambda} = \dfrac{\partial^2 L}{\partial h_{\lambda} \partial h_{\lambda}}$ is the Hessian of the loss w.r.t. the linear pre-activations $h_{\lambda}$.
+where $\mathcal{Q}_{\lambda} = a_{\lambda-1}^{\text{T}} a_{\lambda-1}$ is a covariance of the incoming *activations* $a_{\lambda-1}$ and $\mathcal{H}_{\lambda} = \dfrac{\partial^2 L}{\partial h_{\lambda} \partial h_{\lambda}}$ is the hessian of the loss w.r.t. linear *pre-activations* $h_{\lambda}$.
 
-Expectations can be estimated by samples. Heavy $\mathcal{H}_{\lambda}$ can be estimated using [KFRA](https://arxiv.org/abs/1706.03662) or [KFAC](https://arxiv.org/abs/1503.05671) algorithms (in terms of the implementation, these are most cumbersome).
+Expectations here can be estimated by Monte-Carlo. The $\mathcal{H}_{\lambda}$ is actually quite heavy to compute but can be estimated using [KFRA](https://arxiv.org/abs/1706.03662) or [KFAC](https://arxiv.org/abs/1503.05671) algorithms (in terms of the implementation, these are most cumbersome).
 
 Ultimately, the distribution on layer weights is [matrix normal](https://en.wikipedia.org/wiki/Matrix_normal_distribution)
 
 $$
    \mathbf{w}_{\lambda} \sim \mathcal{MN}(\mathbf{w}^*_{\lambda}, \mathcal{Q}_{\lambda}^{-1}, \mathcal{H}_{\lambda}).
 $$
+
+## Conclusion
+
+We have enough mathematics for now :relieved:. I hope you have enjoyed the concept of bayesian inference and now understand how it can be useful in applications. Some practical python libraries are [Bayesian Neural Networks](https://github.com/JavierAntoran/Bayesian-Neural-Networks?tab=readme-ov-file#stochastic-gradient-hamiltonian-monte-carlo), [pyro](https://pyro.ai/) and our developing library [bayescomp](https://github.com/intsystems/bayes_deep_compression). You can find many examples of using bayes approach in their docs.
