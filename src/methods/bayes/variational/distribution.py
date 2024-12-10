@@ -118,7 +118,7 @@ class LogUniformVarDist(ParamDist):
         Returns:
             torch.Tensor: variance of parameters
         """
-        return torch.FloatTensor([1])
+        raise NotImplementedError("Variance suppossed to not be used, use log_z_tes instead")
 
     def log_prob(self, weights) -> torch.Tensor:
         """
@@ -127,7 +127,7 @@ class LogUniformVarDist(ParamDist):
         Returns:
             torch.Tensor: logarithm probability at weights
         """
-        return torch.FloatTensor([-1])
+        raise NotImplementedError("Probability sampling is not implemented yet")
 
     def log_z_test(self) -> torch.Tensor:
         """
